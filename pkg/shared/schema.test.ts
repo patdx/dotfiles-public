@@ -8,7 +8,7 @@ import {
 
 Deno.test('parsePackageDocument accepts snake_case catalog entries', () => {
   const doc = parsePackageDocument({
-    $schema: 'https://repo.pmil.me/api/schema/v1/pkg.json',
+    $schema: 'https://repo.pmil.me/package.schema.json',
     version: 1,
     name: 'codexbar',
     binary_name: 'codexbar',

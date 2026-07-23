@@ -1,5 +1,5 @@
 {
-  "$schema": "https://repo.pmil.me/api/schema/v1/pkg.json",
+  "$schema": "https://repo.pmil.me/package.schema.json",
   "version": 1,
   "name": "codexbar",
   "binary_name": "codexbar",

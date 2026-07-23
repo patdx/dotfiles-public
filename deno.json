@@ -18,7 +18,8 @@
     "test-all": "deno task --recursive test",
     "test-publish": "deno publish --dry-run",
     "gen-schema": "deno task --cwd pkg gen-schema",
-    "check-schema": "deno task --cwd pkg check-schema"
+    "check-schema": "deno task --cwd pkg check-schema",
+    "gen-site": "deno task --cwd repo-tools gen-site"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.19"

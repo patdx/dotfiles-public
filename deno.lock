@@ -771,6 +771,8 @@
       },
       "repo-tools": {
         "dependencies": [
+          "jsr:@std/fs@^1.0.24",
+          "jsr:@std/path@^1.1.6",
           "npm:wrangler@^4.113.0"
         ]
       }

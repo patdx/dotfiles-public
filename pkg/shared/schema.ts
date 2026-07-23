@@ -10,12 +10,9 @@ export const MAX_DOCUMENT_VERSION = 1
 
 export const DEFAULT_REMOTE_REPO = 'https://repo.pmil.me'
 
-/** Path prefix under a repo base URL where catalog JSON is published. */
-export const CATALOG_API_PREFIX = 'api'
-
 export const PACKAGE_SCHEMA_URL =
-  'https://repo.pmil.me/api/schema/v1/pkg.json'
-export const REPO_SCHEMA_URL = 'https://repo.pmil.me/api/schema/v1/repo.json'
+  'https://repo.pmil.me/package.schema.json'
+export const REPO_SCHEMA_URL = 'https://repo.pmil.me/repo.schema.json'
 
 export interface FileOptions {
   url: string

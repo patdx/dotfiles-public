@@ -1,22 +1,20 @@
 /**
- * Generate JSON Schema files under repo/api/schema/v1 from Valibot schemas.
+ * Generate JSON Schema files under repo/ from Valibot schemas.
  */
 import { dirname, fromFileUrl, join } from '@std/path'
 import { generateCatalogJsonSchemas } from '../shared/schema.ts'
 
-const schemaDir = join(
+const repoDir = join(
   dirname(fromFileUrl(import.meta.url)),
-  '../../repo/api/schema/v1',
+  '../../repo',
 )
 
-await Deno.mkdir(schemaDir, { recursive: true })
-
 const schemas = generateCatalogJsonSchemas()
-const pkgPath = join(schemaDir, 'pkg.json')
-const repoPath = join(schemaDir, 'repo.json')
+const packagePath = join(repoDir, 'package.schema.json')
+const repoPath = join(repoDir, 'repo.schema.json')
 
 await Deno.writeTextFile(
-  pkgPath,
+  packagePath,
   `${JSON.stringify(schemas.package, null, 2)}\n`,
 )
 await Deno.writeTextFile(
@@ -24,5 +22,5 @@ await Deno.writeTextFile(
   `${JSON.stringify(schemas.repo, null, 2)}\n`,
 )
 
-console.log(`Wrote ${pkgPath}`)
+console.log(`Wrote ${packagePath}`)
 console.log(`Wrote ${repoPath}`)

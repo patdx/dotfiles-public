@@ -1,12 +1,12 @@
 /**
- * Fail if repo/api/schema/v1 is stale relative to Valibot schemas.
+ * Fail if repo/*.schema.json is stale relative to Valibot schemas.
  */
 import { dirname, fromFileUrl, join } from '@std/path'
 import { generateCatalogJsonSchemas } from '../shared/schema.ts'
 
-const schemaDir = join(
+const repoDir = join(
   dirname(fromFileUrl(import.meta.url)),
-  '../../repo/api/schema/v1',
+  '../../repo',
 )
 
 function normalize(value: unknown): string {
@@ -14,19 +14,21 @@ function normalize(value: unknown): string {
 }
 
 const expected = generateCatalogJsonSchemas()
-const actualPkg = await Deno.readTextFile(join(schemaDir, 'pkg.json'))
-const actualRepo = await Deno.readTextFile(join(schemaDir, 'repo.json'))
+const actualPackage = await Deno.readTextFile(
+  join(repoDir, 'package.schema.json'),
+)
+const actualRepo = await Deno.readTextFile(join(repoDir, 'repo.schema.json'))
 
 let stale = false
-if (actualPkg !== normalize(expected.package)) {
+if (actualPackage !== normalize(expected.package)) {
   console.error(
-    'repo/api/schema/v1/pkg.json is stale. Run: deno task gen-schema',
+    'repo/package.schema.json is stale. Run: deno task gen-schema',
   )
   stale = true
 }
 if (actualRepo !== normalize(expected.repo)) {
   console.error(
-    'repo/api/schema/v1/repo.json is stale. Run: deno task gen-schema',
+    'repo/repo.schema.json is stale. Run: deno task gen-schema',
   )
   stale = true
 }

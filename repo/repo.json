@@ -1,5 +1,5 @@
 {
-  "$schema": "https://repo.pmil.me/api/schema/v1/repo.json",
+  "$schema": "https://repo.pmil.me/repo.schema.json",
   "version": 1,
   "packages": [
     "apktool",
@@ -9,5 +9,5 @@
     "git-credential-manager",
     "windsurf"
   ],
-  "min_cli_version": "0.6.0"
+  "min_cli_version": "0.7.0"
 }

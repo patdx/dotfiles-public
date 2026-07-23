@@ -49,11 +49,12 @@ simplifies the process of:
 - Resolving known packages from JSON catalogs (default: `https://repo.pmil.me`)
 - Handling GitHub release assets and named URL providers automatically
 
-The package catalog lives in this repo under [`repo/api/`](./repo/api/)
-(`repo.json` + `pkg/<name>.json`, schemas at `schema/v1/pkg.json` and
-`schema/v1/repo.json`) and is published under `https://repo.pmil.me/api/...`
-via [`repo-tools/`](./repo-tools/) (Deno + Wrangler). The site root is reserved
-for a future HTML front page.
+The package catalog lives in this repo under [`repo/`](./repo/)
+(`repo.json` + `package/<name>.json`, schemas at `package.schema.json`
+and `repo.schema.json`) and is published at `https://repo.pmil.me/...`
+via [`repo-tools/`](./repo-tools/) (Deno + Wrangler). Generated HTML pages live
+at `/` and `/package/<name>` (`deno task gen-site`), sharing `/site.css` and
+`/site.js`.
 
 #### Usage
 

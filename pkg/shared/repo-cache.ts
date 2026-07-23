@@ -2,14 +2,14 @@
  * Config + remote catalog cache for @patdx/pkg.
  *
  * Builtin (monorepo) and configured repos share one resolution path: each is a
- * repo base URL/path whose catalog lives under `/api/`.
+ * repo base URL/path with catalog JSON at the root (`repo.json`, `package/`,
+ * `schema/`).
  */
 import { ensureDir, exists } from '@std/fs'
 import { dirname, fromFileUrl, join } from '@std/path'
 import { createHash } from 'node:crypto'
 import { PKG_HOME } from './shared.ts'
 import {
-  CATALOG_API_PREFIX,
   DEFAULT_REMOTE_REPO,
   type PackageDocument,
   parsePackageDocument,
@@ -24,7 +24,7 @@ export const CACHE_DIR = join(PKG_HOME, 'cache', 'repos')
 export const DEFAULT_CACHE_TTL_MS = 60 * 60 * 1000
 
 /** Keep in sync with pkg/deno.json `version`. */
-export const PKG_CLI_VERSION = '0.6.0'
+export const PKG_CLI_VERSION = '0.7.0'
 
 export interface RepoConfigEntry {
   url: string
@@ -116,7 +116,7 @@ function localBaseToPath(base: string): string {
  */
 export async function discoverBuiltinRepoBase(): Promise<string | null> {
   const dir = join(dirname(fromFileUrl(import.meta.url)), '../../repo')
-  if (!await exists(join(dir, 'api', 'repo.json'))) return null
+  if (!await exists(join(dir, 'repo.json'))) return null
   return normalizeRepoBase(dir)
 }
 
@@ -169,12 +169,12 @@ async function writeCacheMeta(dir: string, meta: CacheMeta): Promise<void> {
   await Deno.writeTextFile(join(dir, 'meta.json'), `${JSON.stringify(meta)}\n`)
 }
 
-/** Catalog JSON lives under `/api/` so the site root stays free for HTML. */
+/** Catalog JSON lives at the repo base (static files, no `/api` prefix). */
 function catalogPath(base: string, ...parts: string[]): string {
   if (isHttpBase(base)) {
-    return [base, CATALOG_API_PREFIX, ...parts].join('/')
+    return [base, ...parts].join('/')
   }
-  return join(localBaseToPath(base), CATALOG_API_PREFIX, ...parts)
+  return join(localBaseToPath(base), ...parts)
 }
 
 async function fetchText(url: string): Promise<string> {
@@ -283,8 +283,8 @@ export async function fetchPackageDocument(
 ): Promise<PackageDocument> {
   return await fetchCatalogDocument(
     base,
-    join('pkg', `${name}.json`),
-    catalogPath(normalizeRepoBase(base), 'pkg', `${name}.json`),
+    join('package', `${name}.json`),
+    catalogPath(normalizeRepoBase(base), 'package', `${name}.json`),
     parsePackageDocument,
     options,
   )

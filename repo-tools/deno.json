@@ -1,10 +1,13 @@
 {
   "imports": {
+    "@std/fs": "jsr:@std/fs@^1.0.24",
+    "@std/path": "jsr:@std/path@^1.1.6",
     "wrangler": "npm:wrangler@^4.113.0"
   },
   "tasks": {
-    "deploy": "deno --allow-env --allow-run npm:wrangler deploy",
-    "deploy:dry": "deno --allow-env --allow-run npm:wrangler deploy --dry-run",
+    "gen-site": "deno run -A ./scripts/gen-site.ts",
+    "deploy": "deno task gen-site && deno --allow-env --allow-run npm:wrangler deploy",
+    "deploy:dry": "deno task gen-site && deno --allow-env --allow-run npm:wrangler deploy --dry-run",
     "dev": "deno npm:wrangler dev",
     "start": "deno npm:wrangler dev"
   }
