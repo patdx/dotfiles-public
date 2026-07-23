@@ -17,7 +17,37 @@ export const PACKAGE_SCHEMA_URL =
   'https://repo.pmil.me/api/schema/v1/pkg.json'
 export const REPO_SCHEMA_URL = 'https://repo.pmil.me/api/schema/v1/repo.json'
 
-const FileOptionsSchema = v.object({
+export interface FileOptions {
+  url: string
+  filename?: string
+  type?: 'zip' | 'targz' | 'raw'
+  executable?: boolean
+  url_provider?: string
+}
+
+export interface ShortcutOptions {
+  name?: string
+  icon?: string
+}
+
+export interface PackageDocument {
+  $schema?: string
+  version?: number
+  name: string
+  binary_name?: string
+  files: FileOptions[]
+  shortcut?: ShortcutOptions
+  post_install_message?: string
+}
+
+export interface RepoListing {
+  $schema?: string
+  version?: number
+  packages: string[]
+  min_cli_version?: string
+}
+
+const FileOptionsSchema: v.GenericSchema<FileOptions> = v.object({
   url: v.string(),
   filename: v.optional(v.string()),
   type: v.optional(v.picklist(['zip', 'targz', 'raw'] as const)),
@@ -25,12 +55,12 @@ const FileOptionsSchema = v.object({
   url_provider: v.optional(v.string()),
 })
 
-const ShortcutSchema = v.object({
+const ShortcutSchema: v.GenericSchema<ShortcutOptions> = v.object({
   name: v.optional(v.string()),
   icon: v.optional(v.string()),
 })
 
-const PackageDocumentSchema = v.object({
+const PackageDocumentSchema: v.GenericSchema<PackageDocument> = v.object({
   $schema: v.optional(v.string()),
   version: v.optional(v.number()),
   name: v.string(),
@@ -40,17 +70,12 @@ const PackageDocumentSchema = v.object({
   post_install_message: v.optional(v.string()),
 })
 
-const RepoListingSchema = v.object({
+const RepoListingSchema: v.GenericSchema<RepoListing> = v.object({
   $schema: v.optional(v.string()),
   version: v.optional(v.number()),
   packages: v.array(v.string()),
   min_cli_version: v.optional(v.string()),
 })
-
-export type FileOptions = v.InferOutput<typeof FileOptionsSchema>
-export type ShortcutOptions = v.InferOutput<typeof ShortcutSchema>
-export type PackageDocument = v.InferOutput<typeof PackageDocumentSchema>
-export type RepoListing = v.InferOutput<typeof RepoListingSchema>
 
 /** Runtime install shape (catalog document minus identity / schema metadata). */
 export interface InstallOptions {
