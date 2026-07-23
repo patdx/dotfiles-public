@@ -1,6 +1,6 @@
 {
   "name": "@patdx/pkg",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "license": "MIT",
   "exports": {
     ".": "./cli.ts",
@@ -12,7 +12,8 @@
     "check-deps": "deno run -A jsr:@check/deps",
     "test": "deno test --allow-read --allow-write --allow-run --allow-sys=homedir --allow-env --allow-net",
     "gen-schema": "deno run -A ./scripts/gen-schema.ts",
-    "check-schema": "deno run -A ./scripts/check-schema.ts"
+    "check-schema": "deno run -A ./scripts/check-schema.ts",
+    "bump-version": "deno run -A ./scripts/bump-version.ts"
   },
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.32",
@@ -24,7 +25,14 @@
     "valibot": "npm:valibot@^1.4.2"
   },
   "publish": {
-    "include": ["LICENSE", "README.md", "**/*.ts"],
-    "exclude": ["scripts/", "**/*.test.ts"]
+    "include": [
+      "LICENSE",
+      "README.md",
+      "**/*.ts"
+    ],
+    "exclude": [
+      "scripts/",
+      "**/*.test.ts"
+    ]
   }
 }

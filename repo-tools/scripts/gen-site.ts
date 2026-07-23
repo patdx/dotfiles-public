@@ -14,6 +14,7 @@ const repoRoot = join(scriptDir, '../../repo')
 const packageDir = join(repoRoot, 'package')
 const repoJsonPath = join(repoRoot, 'repo.json')
 const indexHtmlPath = join(repoRoot, 'index.html')
+const pkgDenoJsonPath = join(scriptDir, '../../pkg/deno.json')
 
 const GITHUB_BLOB_BASE =
   'https://github.com/patdx/dotfiles-public/blob/main/repo/package'
@@ -33,7 +34,13 @@ function escapeHtml(text: string): string {
     .replaceAll('"', '&quot;')
 }
 
-const CLI_INSTALL = 'deno install -g -A -n ppkg jsr:@patdx/pkg'
+const pkgVersion = (
+  JSON.parse(await Deno.readTextFile(pkgDenoJsonPath)) as { version: string }
+).version
+const CLI_SPEC = `jsr:@patdx/pkg@${pkgVersion}`
+const CLI_INSTALL = `deno install -g -A -n ppkg ${CLI_SPEC}`
+const CLI_INSTALL_FRESH =
+  `deno install -g -A -n ppkg --min-dep-age=0 ${CLI_SPEC}`
 
 function installCommand(name: string): string {
   return `ppkg add ${name}`
@@ -44,7 +51,7 @@ function removeCommand(name: string): string {
 }
 
 function installOneLiner(name: string): string {
-  return `deno run -A --reload jsr:@patdx/pkg add ${name}`
+  return `deno run -A --reload ${CLI_SPEC} add ${name}`
 }
 
 function htmlHead(title: string): string {
@@ -80,6 +87,15 @@ function renderIndex(packages: string[]): string {
       <p>Install the CLI once (ensure <code>~/.deno/bin</code> is on your <code>PATH</code>):</p>
       <div class="cmd">
         <code>${escapeHtml(CLI_INSTALL)}</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
+      <p>
+        If Deno blocks a freshly published version
+        (<a href="https://docs.deno.com/go/minimum-dependency-age">minimum dependency age</a>,
+        default 24h), retry with <code>--min-dep-age=0</code>:
+      </p>
+      <div class="cmd">
+        <code>${escapeHtml(CLI_INSTALL_FRESH)}</code>
         <button type="button" class="copy-install">Copy</button>
       </div>
       <p>Example install:</p>

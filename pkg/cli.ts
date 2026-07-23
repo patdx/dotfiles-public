@@ -22,6 +22,8 @@ const SELF_INSTALL_ARGS = [
   '-f',
   '-n',
   'ppkg',
+  // Allow freshly published JSR versions (Deno default min age is 24h).
+  '--min-dep-age=0',
   'jsr:@patdx/pkg',
 ] as const
 

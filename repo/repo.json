@@ -9,5 +9,5 @@
     "git-credential-manager",
     "windsurf"
   ],
-  "min_cli_version": "0.7.0"
+  "min_cli_version": "0.7.1"
 }

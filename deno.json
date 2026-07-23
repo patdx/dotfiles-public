@@ -19,7 +19,8 @@
     "test-publish": "deno publish --dry-run",
     "gen-schema": "deno task --cwd pkg gen-schema",
     "check-schema": "deno task --cwd pkg check-schema",
-    "gen-site": "deno task --cwd repo-tools gen-site"
+    "gen-site": "deno task --cwd repo-tools gen-site",
+    "bump-pkg": "deno task --cwd pkg bump-version"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.19"

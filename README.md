@@ -59,11 +59,20 @@ at `/` and `/package/<name>` (`deno task gen-site`), sharing `/site.css` and
 #### Usage
 
 Install the CLI once as `ppkg` (requires Deno; ensure `~/.deno/bin` is on
-`PATH`):
+`PATH`). Pin a published version (see [JSR](https://jsr.io/@patdx/pkg)
+for the latest):
 
 ```sh
-deno install -g -A -n ppkg jsr:@patdx/pkg
-# or: deno run -A jsr:@patdx/pkg self-install
+deno install -g -A -n ppkg jsr:@patdx/pkg@0.7.1
+# or: deno run -A jsr:@patdx/pkg@0.7.1 self-install
+```
+
+If Deno rejects the version because it is newer than the
+[minimum dependency age](https://docs.deno.com/go/minimum-dependency-age)
+(default 24 hours), retry with `--min-dep-age=0`:
+
+```sh
+deno install -g -A -n ppkg --min-dep-age=0 jsr:@patdx/pkg@0.7.1
 ```
 
 Then:
@@ -92,7 +101,7 @@ ppkg self-update
 One-liner alternative without a global install:
 
 ```sh
-deno run -A --reload jsr:@patdx/pkg add windsurf
+deno run -A --reload jsr:@patdx/pkg@0.7.1 add windsurf
 ```
 
 ### @patdx/update
@@ -182,9 +191,10 @@ I've prepared a simple script to install it on Linux using
 one-liner):
 
 ```sh
-deno install -g -A -n ppkg jsr:@patdx/pkg
+deno install -g -A -n ppkg jsr:@patdx/pkg@0.7.1
+# if Deno blocks a fresh publish: add --min-dep-age=0
 ppkg add git-credential-manager
-# or: deno run -A jsr:@patdx/pkg add git-credential-manager
+# or: deno run -A jsr:@patdx/pkg@0.7.1 add git-credential-manager
 ```
 
 After installation, you may want to configure it to use the freedesktop.org

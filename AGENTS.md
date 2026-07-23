@@ -81,12 +81,14 @@ deno task test:e2e
 ### Running the tools directly
 
 ```bash
-# Install the pkg CLI as ppkg (once)
-deno install -g -A -n ppkg jsr:@patdx/pkg
+# Install the pkg CLI as ppkg (once); pin a version from https://jsr.io/@patdx/pkg
+deno install -g -A -n ppkg jsr:@patdx/pkg@0.7.1
+# If Deno blocks a freshly published version (min dependency age), use:
+# deno install -g -A -n ppkg --min-dep-age=0 jsr:@patdx/pkg@0.7.1
 
 # Install a catalog package
 ppkg add windsurf
-# or: deno run -A --reload jsr:@patdx/pkg add windsurf
+# or: deno run -A --reload jsr:@patdx/pkg@0.7.1 add windsurf
 
 # Run system update
 deno run -A --reload jsr:@patdx/update

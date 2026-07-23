@@ -24,7 +24,7 @@ export const CACHE_DIR = join(PKG_HOME, 'cache', 'repos')
 export const DEFAULT_CACHE_TTL_MS = 60 * 60 * 1000
 
 /** Keep in sync with pkg/deno.json `version`. */
-export const PKG_CLI_VERSION = '0.7.0'
+export const PKG_CLI_VERSION = '0.7.1'
 
 export interface RepoConfigEntry {
   url: string
@@ -112,9 +112,11 @@ function localBaseToPath(base: string): string {
 
 /**
  * Optional catalog shipped beside the CLI in this monorepo
- * (`pkg/shared` → `../../repo`). Absent after JSR install.
+ * (`pkg/shared` → `../../repo`). Absent after JSR install (https import.meta.url).
  */
 export async function discoverBuiltinRepoBase(): Promise<string | null> {
+  // Deno.readDir / fromFileUrl only work for file: URLs; JSR serves https:.
+  if (!import.meta.url.startsWith('file:')) return null
   const dir = join(dirname(fromFileUrl(import.meta.url)), '../../repo')
   if (!await exists(join(dir, 'repo.json'))) return null
   return normalizeRepoBase(dir)
