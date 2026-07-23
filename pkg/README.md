@@ -10,8 +10,8 @@ The published binary name is **`ppkg`** (JSR package remains `@patdx/pkg`).
 Pin a published version (see [JSR](https://jsr.io/@patdx/pkg) for the latest):
 
 ```sh
-deno install -g -A -n ppkg jsr:@patdx/pkg@0.7.1
-# or: deno run -A jsr:@patdx/pkg@0.7.1 self-install
+deno install -g -A -n ppkg jsr:@patdx/pkg@0.7.2
+# or: deno run -A jsr:@patdx/pkg@0.7.2 self-install
 ```
 
 If Deno rejects the version because it is newer than the
@@ -19,7 +19,7 @@ If Deno rejects the version because it is newer than the
 (default 24 hours), retry with `--min-dep-age=0`:
 
 ```sh
-deno install -g -A -n ppkg --min-dep-age=0 jsr:@patdx/pkg@0.7.1
+deno install -g -A -n ppkg --min-dep-age=0 jsr:@patdx/pkg@0.7.2
 ```
 
 Ensure `~/.deno/bin` is on your `PATH`. Update later with `ppkg self-update`
@@ -56,7 +56,7 @@ raw URL (not in the catalog) are skipped for now.
 One-liner without a global install:
 
 ```sh
-deno run -A --reload jsr:@patdx/pkg@0.7.1 add windsurf
+deno run -A --reload jsr:@patdx/pkg@0.7.2 add windsurf
 ```
 
 ## Catalog

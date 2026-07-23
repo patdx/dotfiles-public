@@ -64,8 +64,8 @@ Install the CLI once as `ppkg` (requires Deno; ensure `~/.deno/bin` is on
 for the latest):
 
 ```sh
-deno install -g -A -n ppkg jsr:@patdx/pkg@0.7.1
-# or: deno run -A jsr:@patdx/pkg@0.7.1 self-install
+deno install -g -A -n ppkg jsr:@patdx/pkg@0.7.2
+# or: deno run -A jsr:@patdx/pkg@0.7.2 self-install
 ```
 
 If Deno rejects the version because it is newer than the
@@ -73,7 +73,7 @@ If Deno rejects the version because it is newer than the
 (default 24 hours), retry with `--min-dep-age=0`:
 
 ```sh
-deno install -g -A -n ppkg --min-dep-age=0 jsr:@patdx/pkg@0.7.1
+deno install -g -A -n ppkg --min-dep-age=0 jsr:@patdx/pkg@0.7.2
 ```
 
 Then:
@@ -102,7 +102,7 @@ ppkg self-update
 One-liner alternative without a global install:
 
 ```sh
-deno run -A --reload jsr:@patdx/pkg@0.7.1 add windsurf
+deno run -A --reload jsr:@patdx/pkg@0.7.2 add windsurf
 ```
 
 ### @patdx/update
@@ -192,10 +192,10 @@ I've prepared a simple script to install it on Linux using
 one-liner):
 
 ```sh
-deno install -g -A -n ppkg jsr:@patdx/pkg@0.7.1
+deno install -g -A -n ppkg jsr:@patdx/pkg@0.7.2
 # if Deno blocks a fresh publish: add --min-dep-age=0
 ppkg add git-credential-manager
-# or: deno run -A jsr:@patdx/pkg@0.7.1 add git-credential-manager
+# or: deno run -A jsr:@patdx/pkg@0.7.2 add git-credential-manager
 ```
 
 After installation, you may want to configure it to use the freedesktop.org

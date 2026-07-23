@@ -24,7 +24,7 @@ export const CACHE_DIR = join(PKG_HOME, 'cache', 'repos')
 export const DEFAULT_CACHE_TTL_MS = 60 * 60 * 1000
 
 /** Keep in sync with pkg/deno.json `version`. */
-export const PKG_CLI_VERSION = '0.7.1'
+export const PKG_CLI_VERSION = '0.7.2'
 
 export interface RepoConfigEntry {
   url: string
