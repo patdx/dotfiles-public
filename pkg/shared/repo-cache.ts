@@ -265,7 +265,7 @@ function assertMinCliVersion(
 }
 
 /** Compare dotted numeric semver prefixes (major.minor.patch). */
-function compareSemver(a: string, b: string): number {
+export function compareSemver(a: string, b: string): number {
   const pa = a.replace(/^v/, '').split('.').map((p) => parseInt(p, 10) || 0)
   const pb = b.replace(/^v/, '').split('.').map((p) => parseInt(p, 10) || 0)
   for (let i = 0; i < 3; i++) {

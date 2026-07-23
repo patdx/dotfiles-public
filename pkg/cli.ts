@@ -1,4 +1,6 @@
 import { parseArgs } from '@std/cli/parse-args'
+import { join } from '@std/path'
+import { homedir as getHomeDir } from 'node:os'
 import { downloadAndInstall } from './install-binary.ts'
 import { availableProviders } from './shared/url-checker.ts'
 import { listInstalledPackages, removePackage } from './shared/shared.ts'
@@ -11,8 +13,21 @@ import {
   updateAllRepoCaches,
 } from './shared/repo-cache.ts'
 import { DEFAULT_REMOTE_REPO } from './shared/schema.ts'
+import { maybeNotifyCliUpdate } from './shared/cli-update-check.ts'
+
+const SELF_INSTALL_ARGS = [
+  'install',
+  '-g',
+  '-A',
+  '-f',
+  '-n',
+  'ppkg',
+  'jsr:@patdx/pkg',
+] as const
 
 async function main(inputArgs: string[]): Promise<void> {
+  await maybeNotifyCliUpdate()
+
   const args = parseArgs(inputArgs, {
     string: ['url', 'url-provider', 'version', 'name'],
     boolean: ['help'],
@@ -28,6 +43,11 @@ async function main(inputArgs: string[]): Promise<void> {
   }
 
   const [command, subcommand, ...rest] = args._
+
+  if (command === 'self-install' || command === 'self-update') {
+    await runSelfInstall()
+    return
+  }
 
   if (command === 'list') {
     const [packages, availablePackages] = await Promise.all([
@@ -121,6 +141,50 @@ async function main(inputArgs: string[]): Promise<void> {
   Deno.exit(1)
 }
 
+async function denoOnPath(): Promise<boolean> {
+  try {
+    const output = await new Deno.Command('which', {
+      args: ['deno'],
+      stdout: 'null',
+      stderr: 'null',
+    }).output()
+    return output.success
+  } catch {
+    return false
+  }
+}
+
+async function runSelfInstall(): Promise<void> {
+  if (!await denoOnPath()) {
+    console.error('Error: deno is not installed or not on PATH')
+    Deno.exit(1)
+  }
+
+  console.log(`Running: deno ${SELF_INSTALL_ARGS.join(' ')}`)
+  const child = new Deno.Command('deno', {
+    args: [...SELF_INSTALL_ARGS],
+    stdin: 'inherit',
+    stdout: 'inherit',
+    stderr: 'inherit',
+  }).spawn()
+  const status = await child.status
+  if (!status.success) {
+    console.error(
+      `Error: deno install failed with code ${status.code ?? 1}`,
+    )
+    Deno.exit(status.code || 1)
+  }
+
+  const denoBin = join(getHomeDir() || '', '.deno', 'bin')
+  const path = Deno.env.get('PATH') || ''
+  if (!path.split(':').includes(denoBin)) {
+    console.log(
+      `\nAdd Deno's bin directory to your PATH if needed:\n  export PATH="$HOME/.deno/bin:$PATH"`,
+    )
+  }
+  console.log('\nInstalled as: ppkg')
+}
+
 async function handleRepoCommand(
   subcommand: string | undefined,
   rest: Array<string | number>,
@@ -141,7 +205,7 @@ async function handleRepoCommand(
     const url = rest[0]
     if (!url || typeof url !== 'string') {
       console.error('Error: repo URL is required')
-      console.error('Usage: pkg repo add <url>')
+      console.error('Usage: ppkg repo add <url>')
       Deno.exit(1)
     }
     const config = await loadConfig()
@@ -162,7 +226,7 @@ async function handleRepoCommand(
     const url = rest[0]
     if (!url || typeof url !== 'string') {
       console.error('Error: repo URL is required')
-      console.error('Usage: pkg repo remove <url>')
+      console.error('Usage: ppkg repo remove <url>')
       Deno.exit(1)
     }
     const config = await loadConfig()
@@ -192,12 +256,12 @@ async function handleRepoCommand(
     return
   }
 
-  console.error('Usage: pkg repo list|add|remove|update')
+  console.error('Usage: ppkg repo list|add|remove|update')
   Deno.exit(1)
 }
 
 function printHelp(): void {
-  console.log(`Usage: pkg <command> [options]
+  console.log(`Usage: ppkg <command> [options]
 
 Commands:
   add <name|url>      Install a known package or binary from URL
@@ -207,6 +271,8 @@ Commands:
   repo add <url>      Add a remote repo base URL
   repo remove <url>   Remove a remote repo
   repo update         Refresh cached repo/package JSON
+  self-install        Install this CLI globally as ppkg
+  self-update         Reinstall latest @patdx/pkg as ppkg
 
 Options:
   --url <url>         URL to download the binary from (can also be provided as first argument)
@@ -218,13 +284,15 @@ Options:
 Default remote: ${DEFAULT_REMOTE_REPO}
 
 Examples:
-  pkg list
-  pkg remove mycli
-  pkg add windsurf
-  pkg add https://github.com/org/repo
-  pkg add --url https://github.com/org/repo --name mycli
-  pkg add --url https://github.com/org/repo --url-provider github
-  pkg repo add https://example.com/my-pkg-repo
+  ppkg list
+  ppkg remove mycli
+  ppkg add windsurf
+  ppkg add https://github.com/org/repo
+  ppkg add --url https://github.com/org/repo --name mycli
+  ppkg add --url https://github.com/org/repo --url-provider github
+  ppkg repo add https://example.com/my-pkg-repo
+  ppkg self-install
+  ppkg self-update
 `)
 }
 

@@ -33,7 +33,17 @@ function escapeHtml(text: string): string {
     .replaceAll('"', '&quot;')
 }
 
+const CLI_INSTALL = 'deno install -g -A -n ppkg jsr:@patdx/pkg'
+
 function installCommand(name: string): string {
+  return `ppkg add ${name}`
+}
+
+function removeCommand(name: string): string {
+  return `ppkg remove ${name}`
+}
+
+function installOneLiner(name: string): string {
   return `deno run -A --reload jsr:@patdx/pkg add ${name}`
 }
 
@@ -62,12 +72,29 @@ function renderIndex(packages: string[]): string {
       <h1>@patdx/pkg</h1>
       <p>
         Install binary packages on Linux and macOS from this catalog or any URL.
+        The local CLI is <code>ppkg</code> (JSR package
+        <a href="https://jsr.io/@patdx/pkg">@patdx/pkg</a>).
         Default remote:
         <a href="https://repo.pmil.me">https://repo.pmil.me</a>
       </p>
+      <p>Install the CLI once (ensure <code>~/.deno/bin</code> is on your <code>PATH</code>):</p>
+      <div class="cmd">
+        <code>${escapeHtml(CLI_INSTALL)}</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
       <p>Example install:</p>
       <div class="cmd">
         <code>${escapeHtml(installCommand(example))}</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
+      <p>Example remove:</p>
+      <div class="cmd">
+        <code>${escapeHtml(removeCommand(example))}</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
+      <p>One-liner without a global install:</p>
+      <div class="cmd">
+        <code>${escapeHtml(installOneLiner(example))}</code>
         <button type="button" class="copy-install">Copy</button>
       </div>
       <h2>Packages</h2>
@@ -95,9 +122,28 @@ function renderPackagePage(name: string): string {
   <body>
     <main>
       <h1>${escapeHtml(name)}</h1>
-      <p>Install with @patdx/pkg:</p>
+      <p>
+        First-time setup: install the <code>ppkg</code> CLI once
+        (ensure <code>~/.deno/bin</code> is on your <code>PATH</code>;
+        see <a href="/">catalog</a> for more):
+      </p>
+      <div class="cmd">
+        <code>${escapeHtml(CLI_INSTALL)}</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
+      <p>Then install this package:</p>
       <div class="cmd">
         <code>${escapeHtml(installCommand(name))}</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
+      <p>Remove:</p>
+      <div class="cmd">
+        <code>${escapeHtml(removeCommand(name))}</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
+      <p>Or without installing the CLI:</p>
+      <div class="cmd">
+        <code>${escapeHtml(installOneLiner(name))}</code>
         <button type="button" class="copy-install">Copy</button>
       </div>
       <div class="links">

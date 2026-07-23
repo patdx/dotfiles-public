@@ -12,10 +12,27 @@
       <h1>@patdx/pkg</h1>
       <p>
         Install binary packages on Linux and macOS from this catalog or any URL.
+        The local CLI is <code>ppkg</code> (JSR package
+        <a href="https://jsr.io/@patdx/pkg">@patdx/pkg</a>).
         Default remote:
         <a href="https://repo.pmil.me">https://repo.pmil.me</a>
       </p>
+      <p>Install the CLI once (ensure <code>~/.deno/bin</code> is on your <code>PATH</code>):</p>
+      <div class="cmd">
+        <code>deno install -g -A -n ppkg jsr:@patdx/pkg</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
       <p>Example install:</p>
+      <div class="cmd">
+        <code>ppkg add apktool</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
+      <p>Example remove:</p>
+      <div class="cmd">
+        <code>ppkg remove apktool</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>
+      <p>One-liner without a global install:</p>
       <div class="cmd">
         <code>deno run -A --reload jsr:@patdx/pkg add apktool</code>
         <button type="button" class="copy-install">Copy</button>

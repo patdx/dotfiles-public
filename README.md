@@ -58,22 +58,41 @@ at `/` and `/package/<name>` (`deno task gen-site`), sharing `/site.css` and
 
 #### Usage
 
+Install the CLI once as `ppkg` (requires Deno; ensure `~/.deno/bin` is on
+`PATH`):
+
+```sh
+deno install -g -A -n ppkg jsr:@patdx/pkg
+# or: deno run -A jsr:@patdx/pkg self-install
+```
+
+Then:
+
 ```sh
 # Install a known package
-deno run -A --reload jsr:@patdx/pkg add windsurf
+ppkg add windsurf
 
 # Install from a specific URL
-deno run -A --reload jsr:@patdx/pkg add --url https://github.com/duckdb/duckdb --name duckdb
+ppkg add --url https://github.com/duckdb/duckdb --name duckdb
 
 # List installed packages
-deno run -A --reload jsr:@patdx/pkg list
+ppkg list
 
 # Manage remotes
-deno run -A --reload jsr:@patdx/pkg repo list
-deno run -A --reload jsr:@patdx/pkg repo update
+ppkg repo list
+ppkg repo update
 
 # Remove a package
-deno run -A --reload jsr:@patdx/pkg remove duckdb
+ppkg remove duckdb
+
+# Update the CLI itself
+ppkg self-update
+```
+
+One-liner alternative without a global install:
+
+```sh
+deno run -A --reload jsr:@patdx/pkg add windsurf
 ```
 
 ### @patdx/update
@@ -159,10 +178,13 @@ While Git Credential Manager does provide a .deb, they sadly don't provide a
 .rpm for Fedora users.
 
 I've prepared a simple script to install it on Linux using
-[@patdx/pkg](#patdxpkg). Install Deno then run:
+[@patdx/pkg](#patdxpkg). Install Deno, then install the CLI (or use the
+one-liner):
 
 ```sh
-deno run -A jsr:@patdx/pkg add git-credential-manager
+deno install -g -A -n ppkg jsr:@patdx/pkg
+ppkg add git-credential-manager
+# or: deno run -A jsr:@patdx/pkg add git-credential-manager
 ```
 
 After installation, you may want to configure it to use the freedesktop.org

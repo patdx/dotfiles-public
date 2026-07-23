@@ -81,8 +81,12 @@ deno task test:e2e
 ### Running the tools directly
 
 ```bash
-# Install a package with pkg
-deno run -A --reload jsr:@patdx/pkg add windsurf
+# Install the pkg CLI as ppkg (once)
+deno install -g -A -n ppkg jsr:@patdx/pkg
+
+# Install a catalog package
+ppkg add windsurf
+# or: deno run -A --reload jsr:@patdx/pkg add windsurf
 
 # Run system update
 deno run -A --reload jsr:@patdx/update
