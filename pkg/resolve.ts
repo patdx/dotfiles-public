@@ -1,12 +1,9 @@
 /**
  * Resolve a package name across configured repos (and optional builtin).
  */
-import type { InstallOptions } from './shared/types.ts'
-import {
-  fetchPackageDocument,
-  fetchRepoListing,
-  getRepoSources,
-} from './shared/repo-cache.ts'
+import type { InstallOptions } from './shared/schema.ts'
+import { fetchPackageDocument, fetchRepoListing } from './shared/repo-fetch.ts'
+import { getRepoSources } from './shared/repo-config.ts'
 import { installOptionsFromDocument } from './shared/schema.ts'
 
 export interface ResolvedPackage extends InstallOptions {

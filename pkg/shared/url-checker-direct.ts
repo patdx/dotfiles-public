@@ -1,4 +1,5 @@
-import type { UrlCheckResult, UrlProvider } from './types.ts'
+import type { UrlCheckResult, UrlProvider } from './url-checker.ts'
+import { urlArchiveType } from './url-archive-type.ts'
 
 export const directProvider: UrlProvider = {
   name: 'direct',
@@ -10,10 +11,7 @@ export function checkDirectUrl(url: string): UrlCheckResult | null {
     new URL(url)
     return {
       binaryUrl: url,
-      type: url.toLowerCase().endsWith('.tar.gz') ||
-          url.toLowerCase().endsWith('.tgz')
-        ? 'targz'
-        : 'zip',
+      type: urlArchiveType(url),
       urlType: 'direct',
     }
   } catch {

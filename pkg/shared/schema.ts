@@ -10,10 +10,6 @@ export const MAX_DOCUMENT_VERSION = 1
 
 export const DEFAULT_REMOTE_REPO = 'https://repo.pmil.me'
 
-export const PACKAGE_SCHEMA_URL =
-  'https://repo.pmil.me/package.schema.json'
-export const REPO_SCHEMA_URL = 'https://repo.pmil.me/repo.schema.json'
-
 export interface FileOptions {
   url: string
   filename?: string

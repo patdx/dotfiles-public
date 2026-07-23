@@ -6,15 +6,16 @@
  */
 import { ensureDir, exists } from '@std/fs'
 import { dirname, join } from '@std/path'
-import { PKG_HOME } from './shared.ts'
-import { compareSemver, PKG_CLI_VERSION } from './repo-cache.ts'
+import { PKG_HOME } from './fs.ts'
+import { compareSemver } from './semver.ts'
+import { PKG_CLI_VERSION } from './version.ts'
 
 export const JSR_META_URL = 'https://jsr.io/@patdx/pkg/meta.json'
 export const UPDATE_CHECK_TTL_MS = 24 * 60 * 60 * 1000
-export const CLI_UPDATE_CHECK_PATH = join(
+export const PKG_UPDATE_CHECK_PATH = join(
   PKG_HOME,
   'cache',
-  'cli-update-check.json',
+  'pkg-update-check.json',
 )
 
 export interface JsrPackageMeta {
@@ -92,12 +93,15 @@ async function readCache(
   }
 }
 
-async function writeCache(path: string, cache: UpdateCheckCache): Promise<void> {
+async function writeCache(
+  path: string,
+  cache: UpdateCheckCache,
+): Promise<void> {
   await ensureDir(dirname(path))
   await Deno.writeTextFile(path, `${JSON.stringify(cache)}\n`)
 }
 
-export interface MaybeNotifyCliUpdateOptions {
+export interface MaybeNotifyPkgUpdateOptions {
   currentVersion?: string
   ttlMs?: number
   cachePath?: string
@@ -113,8 +117,8 @@ export interface MaybeNotifyCliUpdateOptions {
  * If due, fetch JSR meta and print a non-blocking update notice to stderr.
  * Network / parse failures are silent.
  */
-export async function maybeNotifyCliUpdate(
-  options: MaybeNotifyCliUpdateOptions = {},
+export async function maybeNotifyPkgUpdate(
+  options: MaybeNotifyPkgUpdateOptions = {},
 ): Promise<void> {
   const env = options.env ?? Deno.env
   if (env.get('PPKG_NO_UPDATE_CHECK') === '1') return
@@ -124,7 +128,7 @@ export async function maybeNotifyCliUpdate(
 
   const now = options.now ?? Date.now
   const ttlMs = options.ttlMs ?? UPDATE_CHECK_TTL_MS
-  const cachePath = options.cachePath ?? CLI_UPDATE_CHECK_PATH
+  const cachePath = options.cachePath ?? PKG_UPDATE_CHECK_PATH
   const currentVersion = options.currentVersion ?? PKG_CLI_VERSION
 
   const cached = await readCache(cachePath)

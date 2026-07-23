@@ -1,13 +1,11 @@
 /**
  * Generate JSON Schema files under repo/ from Valibot schemas.
  */
-import { dirname, fromFileUrl, join } from '@std/path'
+import { join } from '@std/path'
 import { generateCatalogJsonSchemas } from '../shared/schema.ts'
+import { getRepoDir } from './_repo-dir.ts'
 
-const repoDir = join(
-  dirname(fromFileUrl(import.meta.url)),
-  '../../repo',
-)
+const repoDir = getRepoDir(import.meta.url)
 
 const schemas = generateCatalogJsonSchemas()
 const packagePath = join(repoDir, 'package.schema.json')

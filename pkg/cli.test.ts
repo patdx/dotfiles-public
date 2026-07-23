@@ -1,5 +1,5 @@
 import { assert, assertEquals, assertThrows } from '@std/assert'
-import { assertManagedPackageName } from './shared/shared.ts'
+import { assertManagedPackageName } from './shared/fs.ts'
 
 Deno.test('assertManagedPackageName rejects path traversal', () => {
   assertEquals(

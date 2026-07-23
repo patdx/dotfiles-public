@@ -1,9 +1,9 @@
 import { assertEquals, assertRejects } from '@std/assert'
 import {
-  checkPackageUpdates,
-  statusFromVersions,
-  type ResolvePackageFn,
   type CheckAvailableFn,
+  checkPackageUpdates,
+  type ResolvePackageFn,
+  statusFromVersions,
 } from './check-updates.ts'
 import type { ResolvedPackage } from './resolve.ts'
 
@@ -24,11 +24,12 @@ Deno.test('statusFromVersions uses string equality', () => {
 })
 
 Deno.test('checkPackageUpdates marks outdated and current', async () => {
-  const resolve: ResolvePackageFn = async (name) => fakeResolved(name)
-  const checkAvailable: CheckAvailableFn = async (pkg) => {
-    if (pkg.name === 'caddy') return '2.9.0'
-    if (pkg.name === 'duckdb') return '1.2.0'
-    return 'latest'
+  const resolve: ResolvePackageFn = (name) =>
+    Promise.resolve(fakeResolved(name))
+  const checkAvailable: CheckAvailableFn = (pkg) => {
+    if (pkg.name === 'caddy') return Promise.resolve('2.9.0')
+    if (pkg.name === 'duckdb') return Promise.resolve('1.2.0')
+    return Promise.resolve('latest')
   }
 
   const results = await checkPackageUpdates(
@@ -48,10 +49,9 @@ Deno.test('checkPackageUpdates marks outdated and current', async () => {
 })
 
 Deno.test('checkPackageUpdates skips packages not in catalog', async () => {
-  const resolve: ResolvePackageFn = async (name) => {
-    throw new Error(`Unknown package '${name}'`)
-  }
-  const checkAvailable: CheckAvailableFn = async () => '1.0.0'
+  const resolve: ResolvePackageFn = (name) =>
+    Promise.reject(new Error(`Unknown package '${name}'`))
+  const checkAvailable: CheckAvailableFn = () => Promise.resolve('1.0.0')
 
   const results = await checkPackageUpdates(
     [{ name: 'custom-bin', version: '0.1.0' }],
@@ -64,10 +64,10 @@ Deno.test('checkPackageUpdates skips packages not in catalog', async () => {
 })
 
 Deno.test('checkPackageUpdates reports provider errors', async () => {
-  const resolve: ResolvePackageFn = async (name) => fakeResolved(name)
-  const checkAvailable: CheckAvailableFn = async () => {
-    throw new Error('rate limited')
-  }
+  const resolve: ResolvePackageFn = (name) =>
+    Promise.resolve(fakeResolved(name))
+  const checkAvailable: CheckAvailableFn = () =>
+    Promise.reject(new Error('rate limited'))
 
   const results = await checkPackageUpdates(
     [{ name: 'caddy', version: '2.8.0' }],
@@ -79,8 +79,9 @@ Deno.test('checkPackageUpdates reports provider errors', async () => {
 })
 
 Deno.test('checkPackageUpdates filters by names and rejects missing', async () => {
-  const resolve: ResolvePackageFn = async (name) => fakeResolved(name)
-  const checkAvailable: CheckAvailableFn = async () => '2.0.0'
+  const resolve: ResolvePackageFn = (name) =>
+    Promise.resolve(fakeResolved(name))
+  const checkAvailable: CheckAvailableFn = () => Promise.resolve('2.0.0')
 
   const results = await checkPackageUpdates(
     [

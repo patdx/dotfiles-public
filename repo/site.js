@@ -5,7 +5,9 @@ async function copyInstall(button) {
     await navigator.clipboard.writeText(text)
     const prev = button.textContent
     button.textContent = 'Copied'
-    setTimeout(() => { button.textContent = prev }, 1500)
+    setTimeout(() => {
+      button.textContent = prev
+    }, 1500)
   } catch {
     button.textContent = 'Failed'
   }

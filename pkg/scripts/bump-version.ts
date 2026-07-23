@@ -12,7 +12,7 @@
  *
  * Updates:
  *   - pkg/deno.json (canonical JSR version)
- *   - pkg/shared/repo-cache.ts (PKG_CLI_VERSION)
+ *   - pkg/shared/version.ts (PKG_CLI_VERSION)
  *   - README.md, pkg/README.md, AGENTS.md (jsr:@patdx/pkg@…)
  *   - repo/repo.json min_cli_version (unless --no-min-cli)
  *   - regenerated site HTML via gen-site (unless --no-site)
@@ -24,7 +24,7 @@ const pkgDir = join(scriptDir, '..')
 const repoRoot = join(pkgDir, '..')
 
 const DENO_JSON = join(pkgDir, 'deno.json')
-const REPO_CACHE = join(pkgDir, 'shared/repo-cache.ts')
+const VERSION_TS = join(pkgDir, 'shared/version.ts')
 const REPO_JSON = join(repoRoot, 'repo/repo.json')
 const DOC_FILES = [
   join(repoRoot, 'README.md'),
@@ -121,16 +121,16 @@ await writeText(
 )
 
 {
-  const src = await Deno.readTextFile(REPO_CACHE)
+  const src = await Deno.readTextFile(VERSION_TS)
   const needle = `export const PKG_CLI_VERSION = '${current}'`
   const replacement = `export const PKG_CLI_VERSION = '${next}'`
   if (!src.includes(needle)) {
     console.error(
-      `Could not find PKG_CLI_VERSION = '${current}' in ${REPO_CACHE}`,
+      `Could not find PKG_CLI_VERSION = '${current}' in ${VERSION_TS}`,
     )
     Deno.exit(1)
   }
-  await writeText(REPO_CACHE, src.replace(needle, replacement), dryRun)
+  await writeText(VERSION_TS, src.replace(needle, replacement), dryRun)
 }
 
 const pinFrom = `jsr:@patdx/pkg@${current}`

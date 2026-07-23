@@ -35,40 +35,7 @@ export async function update(
   await runIfAvailable(runtime, 'bun', ['bun', 'upgrade'])
   await runIfAvailable(runtime, 'deno', ['deno', 'upgrade'])
 
-  if (hasFnm) {
-    await runtime.run(['fnm', 'install', FNM_NODE_VERSION])
-    await runtime.run(['fnm', 'default', FNM_NODE_VERSION])
-  }
-
-  const useFnmNode = hasFnm
-  const npmAvailable = await nodeCommandExists(runtime, useFnmNode, 'npm')
-  if (npmAvailable) {
-    await restoreMissingGlobalNpmPackages(
-      runtime,
-      initialNpmPackages,
-      useFnmNode,
-    )
-    await runtime.run(prefixWithFnm(useFnmNode, ['npm', 'update', '--global']))
-  }
-
-  const corepackAvailable = await nodeCommandExists(
-    runtime,
-    useFnmNode,
-    'corepack',
-  )
-  if (corepackAvailable) {
-    await runtime.run(
-      prefixWithFnm(
-        useFnmNode,
-        ['corepack', 'install', '--global', 'pnpm@latest'],
-      ),
-    )
-  }
-
-  const pnpmAvailable = await nodeCommandExists(runtime, useFnmNode, 'pnpm')
-  if (pnpmAvailable) {
-    await runtime.run(prefixWithFnm(useFnmNode, ['pnpm', 'update', '--global']))
-  }
+  await updateNodeEcosystem(runtime, hasFnm, initialNpmPackages)
 
   await runIfAvailable(runtime, 'yt-dlp', ['yt-dlp', '-U'])
   await runIfAvailable(runtime, 'claude', ['claude', 'update'])
@@ -78,25 +45,69 @@ export async function update(
   await runIfAvailable(runtime, 'brew', ['brew', 'upgrade'])
 
   if (runtime.platform === 'linux') {
-    if (await runtime.commandExists('git-credential-manager')) {
-      await runtime.updateGitCredentialManager()
-    }
-
-    await runIfAvailable(runtime, 'snap', ['sudo', 'snap', 'refresh'])
-    await runIfAvailable(runtime, 'dnf', [
-      'sudo',
-      'dnf',
-      'upgrade',
-      '--refresh',
-    ])
-
-    if (await runtime.commandExists('apt')) {
-      await runtime.run(['sudo', 'apt', 'update'])
-      await runtime.run(['sudo', 'apt', 'upgrade'])
-    }
+    await updateLinuxPackages(runtime)
   }
 
   console.log('Update completed successfully!')
+}
+
+async function updateNodeEcosystem(
+  runtime: UpdateRuntime,
+  hasFnm: boolean,
+  initialNpmPackages: string[],
+): Promise<void> {
+  if (hasFnm) {
+    await runtime.run(['fnm', 'install', FNM_NODE_VERSION])
+    await runtime.run(['fnm', 'default', FNM_NODE_VERSION])
+  }
+
+  const npmAvailable = await nodeCommandExists(runtime, hasFnm, 'npm')
+  if (npmAvailable) {
+    await restoreMissingGlobalNpmPackages(
+      runtime,
+      initialNpmPackages,
+      hasFnm,
+    )
+    await runtime.run(prefixWithFnm(hasFnm, ['npm', 'update', '--global']))
+  }
+
+  const corepackAvailable = await nodeCommandExists(
+    runtime,
+    hasFnm,
+    'corepack',
+  )
+  if (corepackAvailable) {
+    await runtime.run(
+      prefixWithFnm(
+        hasFnm,
+        ['corepack', 'install', '--global', 'pnpm@latest'],
+      ),
+    )
+  }
+
+  const pnpmAvailable = await nodeCommandExists(runtime, hasFnm, 'pnpm')
+  if (pnpmAvailable) {
+    await runtime.run(prefixWithFnm(hasFnm, ['pnpm', 'update', '--global']))
+  }
+}
+
+async function updateLinuxPackages(runtime: UpdateRuntime): Promise<void> {
+  if (await runtime.commandExists('git-credential-manager')) {
+    await runtime.updateGitCredentialManager()
+  }
+
+  await runIfAvailable(runtime, 'snap', ['sudo', 'snap', 'refresh'])
+  await runIfAvailable(runtime, 'dnf', [
+    'sudo',
+    'dnf',
+    'upgrade',
+    '--refresh',
+  ])
+
+  if (await runtime.commandExists('apt')) {
+    await runtime.run(['sudo', 'apt', 'update'])
+    await runtime.run(['sudo', 'apt', 'upgrade'])
+  }
 }
 
 export function prefixWithFnm(
@@ -201,6 +212,22 @@ async function getGlobalNpmPackages(
 }
 
 function createRuntime(): UpdateRuntime {
+  const run = async (command: string[]): Promise<void> => {
+    console.log(`Running: ${command.join(' ')}`)
+    const child = new Deno.Command(command[0], {
+      args: command.slice(1),
+      stdin: 'inherit',
+      stdout: 'inherit',
+      stderr: 'inherit',
+    }).spawn()
+    const status = await child.status
+    if (!status.success) {
+      throw new Error(
+        `Command failed with code ${status.code}: ${command.join(' ')}`,
+      )
+    }
+  }
+
   return {
     platform: Deno.build.os,
     async commandExists(command: string): Promise<boolean> {
@@ -212,21 +239,7 @@ function createRuntime(): UpdateRuntime {
       const status = await child.status
       return status.success
     },
-    async run(command: string[]): Promise<void> {
-      console.log(`Running: ${command.join(' ')}`)
-      const child = new Deno.Command(command[0], {
-        args: command.slice(1),
-        stdin: 'inherit',
-        stdout: 'inherit',
-        stderr: 'inherit',
-      }).spawn()
-      const status = await child.status
-      if (!status.success) {
-        throw new Error(
-          `Command failed with code ${status.code}: ${command.join(' ')}`,
-        )
-      }
-    },
+    run,
     async runQuiet(command: string[]): Promise<CommandResult> {
       const output = await new Deno.Command(command[0], {
         args: command.slice(1),
@@ -240,7 +253,7 @@ function createRuntime(): UpdateRuntime {
       }
     },
     async updateGitCredentialManager(): Promise<void> {
-      await this.run([
+      await run([
         'deno',
         'run',
         '-A',

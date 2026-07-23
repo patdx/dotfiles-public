@@ -1,5 +1,5 @@
 import { ofetch } from 'ofetch'
-import type { UrlCheckResult, UrlProvider } from './types.ts'
+import type { UrlCheckResult, UrlProvider } from './url-checker.ts'
 
 interface WindsurfUpdateResponse {
   url: string

@@ -1,7 +1,8 @@
 import { existsSync } from 'node:fs'
 import process from 'node:process'
 import { readGithubUrl } from './normalize-github-url.ts'
-import type { UrlCheckResult, UrlProvider } from './types.ts'
+import type { UrlCheckResult, UrlProvider } from './url-checker.ts'
+import { urlArchiveType } from './url-archive-type.ts'
 
 export const githubProvider: UrlProvider = {
   name: 'github',
@@ -29,13 +30,6 @@ interface AssetAnalysis {
 
 const BINARY_EXTENSIONS = ['.tar.gz', '.tgz', '.zip']
 const NON_BINARY_EXTENSIONS = ['.symbols.tar.gz', '-symbols.tar.gz']
-
-// Another example ambiguous case
-// Warning: Found multiple matching assets for your system:
-// - duckdb_cli-linux-amd64.zip
-// - libduckdb-linux-amd64.zip
-// Maybe add a heuristic where if it contains "cli", +1 point
-// If it contains "lib", -1 point?
 
 function couldBeBinary(url: string): boolean {
   url = url.toLowerCase()
@@ -250,10 +244,7 @@ async function checkGithubUrl(
   return {
     binaryUrl: viableAsset.url,
     version: release.tag_name.replace(/^v/, ''),
-    type: viableAsset.url.toLowerCase().endsWith('.tar.gz') ||
-        viableAsset.url.toLowerCase().endsWith('.tgz')
-      ? 'targz'
-      : 'zip',
+    type: urlArchiveType(viableAsset.url),
     urlType: 'github',
   }
 }

@@ -17,7 +17,9 @@
     --code-bg: #1e1e1e;
   }
 }
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, sans-serif;
@@ -30,11 +32,23 @@ main {
   margin: 0 auto;
   padding: 2rem 1.25rem 3rem;
 }
-h1 { font-size: 1.75rem; margin: 0 0 0.5rem; }
-p { margin: 0.75rem 0; color: var(--muted); }
-a { color: var(--accent); }
-ul { padding-left: 1.25rem; }
-li { margin: 0.35rem 0; }
+h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.5rem;
+}
+p {
+  margin: 0.75rem 0;
+  color: var(--muted);
+}
+a {
+  color: var(--accent);
+}
+ul {
+  padding-left: 1.25rem;
+}
+li {
+  margin: 0.35rem 0;
+}
 .cmd {
   display: flex;
   gap: 0.5rem;
@@ -61,6 +75,16 @@ button {
   cursor: pointer;
   font: inherit;
 }
-button:hover { border-color: var(--accent); }
-nav { margin-top: 2rem; font-size: 0.95rem; }
-.links { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.25rem; }
+button:hover {
+  border-color: var(--accent);
+}
+nav {
+  margin-top: 2rem;
+  font-size: 0.95rem;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}

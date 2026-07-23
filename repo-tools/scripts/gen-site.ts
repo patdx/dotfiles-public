@@ -34,6 +34,13 @@ function escapeHtml(text: string): string {
     .replaceAll('"', '&quot;')
 }
 
+function renderCmdBlock(escapedCode: string): string {
+  return `<div class="cmd">
+        <code>${escapedCode}</code>
+        <button type="button" class="copy-install">Copy</button>
+      </div>`
+}
+
 const pkgVersion = (
   JSON.parse(await Deno.readTextFile(pkgDenoJsonPath)) as { version: string }
 ).version
@@ -85,34 +92,19 @@ function renderIndex(packages: string[]): string {
         <a href="https://repo.pmil.me">https://repo.pmil.me</a>
       </p>
       <p>Install the CLI once (ensure <code>~/.deno/bin</code> is on your <code>PATH</code>):</p>
-      <div class="cmd">
-        <code>${escapeHtml(CLI_INSTALL)}</code>
-        <button type="button" class="copy-install">Copy</button>
-      </div>
+      ${renderCmdBlock(escapeHtml(CLI_INSTALL))}
       <p>
         If Deno blocks a freshly published version
         (<a href="https://docs.deno.com/go/minimum-dependency-age">minimum dependency age</a>,
         default 24h), retry with <code>--min-dep-age=0</code>:
       </p>
-      <div class="cmd">
-        <code>${escapeHtml(CLI_INSTALL_FRESH)}</code>
-        <button type="button" class="copy-install">Copy</button>
-      </div>
+      ${renderCmdBlock(escapeHtml(CLI_INSTALL_FRESH))}
       <p>Example install:</p>
-      <div class="cmd">
-        <code>${escapeHtml(installCommand(example))}</code>
-        <button type="button" class="copy-install">Copy</button>
-      </div>
+      ${renderCmdBlock(escapeHtml(installCommand(example)))}
       <p>Example remove:</p>
-      <div class="cmd">
-        <code>${escapeHtml(removeCommand(example))}</code>
-        <button type="button" class="copy-install">Copy</button>
-      </div>
+      ${renderCmdBlock(escapeHtml(removeCommand(example)))}
       <p>One-liner without a global install:</p>
-      <div class="cmd">
-        <code>${escapeHtml(installOneLiner(example))}</code>
-        <button type="button" class="copy-install">Copy</button>
-      </div>
+      ${renderCmdBlock(escapeHtml(installOneLiner(example)))}
       <h2>Packages</h2>
       <ul>
         ${list}
@@ -143,25 +135,13 @@ function renderPackagePage(name: string): string {
         (ensure <code>~/.deno/bin</code> is on your <code>PATH</code>;
         see <a href="/">catalog</a> for more):
       </p>
-      <div class="cmd">
-        <code>${escapeHtml(CLI_INSTALL)}</code>
-        <button type="button" class="copy-install">Copy</button>
-      </div>
+      ${renderCmdBlock(escapeHtml(CLI_INSTALL))}
       <p>Then install this package:</p>
-      <div class="cmd">
-        <code>${escapeHtml(installCommand(name))}</code>
-        <button type="button" class="copy-install">Copy</button>
-      </div>
+      ${renderCmdBlock(escapeHtml(installCommand(name)))}
       <p>Remove:</p>
-      <div class="cmd">
-        <code>${escapeHtml(removeCommand(name))}</code>
-        <button type="button" class="copy-install">Copy</button>
-      </div>
+      ${renderCmdBlock(escapeHtml(removeCommand(name)))}
       <p>Or without installing the CLI:</p>
-      <div class="cmd">
-        <code>${escapeHtml(installOneLiner(name))}</code>
-        <button type="button" class="copy-install">Copy</button>
-      </div>
+      ${renderCmdBlock(escapeHtml(installOneLiner(name)))}
       <div class="links">
         <a href="${escapeHtml(manifestPath)}">Manifest JSON</a>
         <a href="${escapeHtml(githubUrl)}">Edit on GitHub</a>

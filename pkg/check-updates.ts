@@ -1,8 +1,7 @@
 /**
  * Check installed catalog packages for available updates.
  */
-import type { ResolvedPackage } from './resolve.ts'
-import { resolvePackage } from './resolve.ts'
+import { type ResolvedPackage, resolvePackage } from './resolve.ts'
 import { checkUrl } from './shared/url-checker.ts'
 
 export type PackageUpdateStatus =

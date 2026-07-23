@@ -1,7 +1,18 @@
-import type { UrlCheckResult, UrlProvider } from './types.ts'
 import { directProvider } from './url-checker-direct.ts'
 import { githubProvider } from './url-checker-github.ts'
 import { windsurfStableProvider } from './url-checker-windsurf.ts'
+
+export interface UrlCheckResult {
+  binaryUrl: string
+  version?: string
+  type: 'zip' | 'targz'
+  urlType: string
+}
+
+export interface UrlProvider {
+  name: string
+  check: (url: string) => Promise<UrlCheckResult | null> | UrlCheckResult | null
+}
 
 const providers: UrlProvider[] = [
   githubProvider,
