@@ -25,18 +25,33 @@ deno install -g -A -n ppkg --min-dep-age=0 jsr:@patdx/pkg@0.7.1
 Ensure `~/.deno/bin` is on your `PATH`. Update later with `ppkg self-update`
 (same as force-reinstall from JSR).
 
-Set `PATDX_PKG_NO_UPDATE_CHECK=1` to disable the optional startup notice when a
+Set `PPKG_NO_UPDATE_CHECK=1` to disable the optional startup notice when a
 newer JSR version is available.
+
+## Data layout
+
+- `~/.ppkg/` — installed package versions, `config.json`, and cache
+- `~/.local/bin/` — symlinks to the active binaries
+
+Override catalog sources with `PPKG_REPOS` (comma-separated base URLs/paths).
 
 ## Usage
 
 ```sh
 ppkg add windsurf
 ppkg list
+ppkg outdated
+ppkg update
+ppkg update caddy
 ppkg remove duckdb
 ppkg repo list
 ppkg repo update
 ```
+
+`ppkg outdated` checks installed catalog packages against provider-latest
+versions (exit code `1` if any are outdated). `ppkg update` upgrades outdated
+catalog packages, or only the named ones when given. Packages installed from a
+raw URL (not in the catalog) are skipped for now.
 
 One-liner without a global install:
 

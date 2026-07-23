@@ -3,7 +3,7 @@ import { join } from '@std/path'
 import { homedir as getHomeDir } from 'node:os'
 import path from 'node:path'
 
-export const PKG_HOME = path.resolve(getHomeDir(), '.patdx', 'pkg')
+export const PKG_HOME = path.resolve(getHomeDir(), '.ppkg')
 export const LOCAL_BIN_DIR = path.join(getHomeDir() || '', '.local', 'bin')
 export const DESKTOP_DIR = path.join(
   getHomeDir(),
@@ -266,7 +266,7 @@ export async function removePackage(
       await Deno.remove(localBinPath)
     }
 
-    // Remove package directory from .patdx/pkg if it exists
+    // Remove package directory from ~/.ppkg if it exists
     if (await exists(pkgPath)) {
       await Deno.remove(pkgPath, { recursive: true })
     }

@@ -49,7 +49,7 @@ export function getDefaultConfig(): PkgConfig {
 }
 
 export async function loadConfig(): Promise<PkgConfig> {
-  const fromEnv = Deno.env.get('PATDX_PKG_REPOS')
+  const fromEnv = Deno.env.get('PPKG_REPOS')
   if (fromEnv?.trim()) {
     return {
       repos: fromEnv.split(',').map((url) => ({ url: url.trim() })).filter((
@@ -124,13 +124,13 @@ export async function discoverBuiltinRepoBase(): Promise<string | null> {
 
 /**
  * Builtin (if present) first, then configured repos; duplicates skipped.
- * `PATDX_PKG_REPOS` is a full override — builtin is omitted so the env list
+ * `PPKG_REPOS` is a full override — builtin is omitted so the env list
  * is the complete source of truth.
  */
 export async function getRepoSources(
   config?: PkgConfig,
 ): Promise<RepoSource[]> {
-  const fromEnv = Boolean(Deno.env.get('PATDX_PKG_REPOS')?.trim())
+  const fromEnv = Boolean(Deno.env.get('PPKG_REPOS')?.trim())
   const cfg = config ?? await loadConfig()
   const sources: RepoSource[] = []
   const seen = new Set<string>()

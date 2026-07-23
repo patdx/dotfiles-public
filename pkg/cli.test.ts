@@ -41,3 +41,19 @@ Deno.test('pkg list finds known packages outside repo cwd', async () => {
     await Deno.remove(tempDir, { recursive: true })
   }
 })
+
+Deno.test('pkg help lists outdated and update', async () => {
+  const cliPath = new URL('./cli.ts', import.meta.url).pathname
+  const output = await new Deno.Command(Deno.execPath(), {
+    args: ['run', '-A', cliPath, '--help'],
+    stdout: 'piped',
+    stderr: 'piped',
+  }).output()
+
+  const stdout = new TextDecoder().decode(output.stdout)
+  const stderr = new TextDecoder().decode(output.stderr)
+
+  assert(output.success, stderr)
+  assert(stdout.includes('outdated'), stdout)
+  assert(stdout.includes('update [name...]'), stdout)
+})

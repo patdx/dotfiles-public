@@ -1,6 +1,10 @@
 import { parseArgs } from '@std/cli/parse-args'
 import { join } from '@std/path'
 import { homedir as getHomeDir } from 'node:os'
+import {
+  checkPackageUpdates,
+  type PackageUpdateCheck,
+} from './check-updates.ts'
 import { downloadAndInstall } from './install-binary.ts'
 import { availableProviders } from './shared/url-checker.ts'
 import { listInstalledPackages, removePackage } from './shared/shared.ts'
@@ -82,6 +86,18 @@ async function main(inputArgs: string[]): Promise<void> {
       typeof subcommand === 'string' ? subcommand : undefined,
       rest,
     )
+    return
+  }
+
+  if (command === 'outdated') {
+    await handleOutdatedCommand()
+    return
+  }
+
+  if (command === 'update') {
+    const names = [subcommand, ...rest]
+      .filter((value): value is string => typeof value === 'string')
+    await handleUpdateCommand(names)
     return
   }
 
@@ -187,6 +203,131 @@ async function runSelfInstall(): Promise<void> {
   console.log('\nInstalled as: ppkg')
 }
 
+async function handleOutdatedCommand(): Promise<void> {
+  const installed = await listInstalledPackages()
+  if (installed.length === 0) {
+    console.log('No packages installed')
+    return
+  }
+
+  const checks = await checkPackageUpdates(installed)
+  printUpdateChecks(checks)
+
+  const outdated = checks.filter((check) => check.status === 'outdated')
+  if (outdated.length > 0) {
+    Deno.exit(1)
+  }
+}
+
+async function handleUpdateCommand(names: string[]): Promise<void> {
+  const installed = await listInstalledPackages()
+  if (installed.length === 0) {
+    console.log('No packages installed')
+    return
+  }
+
+  let checks: PackageUpdateCheck[]
+  try {
+    checks = await checkPackageUpdates(installed, {
+      names: names.length > 0 ? names : undefined,
+    })
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error))
+    Deno.exit(1)
+  }
+
+  for (const check of checks) {
+    if (check.status === 'skipped') {
+      console.log(
+        `  ${check.name}: skipped (${check.reason ?? 'not in catalog'})`,
+      )
+    } else if (check.status === 'error') {
+      console.error(
+        `  ${check.name}: error (${check.reason ?? 'unknown error'})`,
+      )
+    }
+  }
+
+  const toUpdate = names.length > 0
+    ? checks.filter((check) =>
+      check.status === 'outdated' || check.status === 'current'
+    )
+    : checks.filter((check) => check.status === 'outdated')
+
+  if (toUpdate.length === 0) {
+    const hadCatalog = checks.some((check) =>
+      check.status === 'outdated' || check.status === 'current'
+    )
+    if (hadCatalog) {
+      console.log('All catalog packages are up to date')
+    } else {
+      console.log('No catalog packages to update')
+    }
+    if (checks.some((check) => check.status === 'error')) {
+      Deno.exit(1)
+    }
+    return
+  }
+
+  let failed = 0
+  for (const check of toUpdate) {
+    if (!check.resolved) {
+      console.error(`  ${check.name}: missing resolved package`)
+      failed++
+      continue
+    }
+    if (check.status === 'current') {
+      console.log(`  ${check.name}: ${check.installed} (up to date)`)
+      continue
+    }
+    console.log(
+      `Updating ${check.name}: ${check.installed} → ${check.available}`,
+    )
+    try {
+      await downloadAndInstall(check.resolved)
+    } catch (error) {
+      console.error(
+        `  ${check.name}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      )
+      failed++
+    }
+  }
+
+  if (failed > 0 || checks.some((check) => check.status === 'error')) {
+    Deno.exit(1)
+  }
+}
+
+function printUpdateChecks(checks: PackageUpdateCheck[]): void {
+  let shown = 0
+  for (const check of checks) {
+    if (check.status === 'outdated') {
+      console.log(
+        `  ${check.name}: ${check.installed} → ${check.available}`,
+      )
+      shown++
+    } else if (check.status === 'current') {
+      console.log(`  ${check.name}: ${check.installed} (up to date)`)
+      shown++
+    } else if (check.status === 'skipped') {
+      console.log(
+        `  ${check.name}: skipped (${check.reason ?? 'not in catalog'})`,
+      )
+      shown++
+    } else if (check.status === 'error') {
+      console.error(
+        `  ${check.name}: error (${check.reason ?? 'unknown error'})`,
+      )
+      shown++
+    }
+  }
+  if (shown === 0) {
+    console.log('No packages to check')
+  }
+}
+
 async function handleRepoCommand(
   subcommand: string | undefined,
   rest: Array<string | number>,
@@ -268,6 +409,8 @@ function printHelp(): void {
 Commands:
   add <name|url>      Install a known package or binary from URL
   list                List installed and available packages
+  outdated            Show installed packages with available updates
+  update [name...]    Update outdated packages (or named packages)
   remove <pkg>        Remove an installed package
   repo list           List configured remote repos
   repo add <url>      Add a remote repo base URL
@@ -287,6 +430,9 @@ Default remote: ${DEFAULT_REMOTE_REPO}
 
 Examples:
   ppkg list
+  ppkg outdated
+  ppkg update
+  ppkg update caddy duckdb
   ppkg remove mycli
   ppkg add windsurf
   ppkg add https://github.com/org/repo

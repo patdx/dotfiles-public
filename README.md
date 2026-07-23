@@ -45,7 +45,8 @@ and some tools to help set them up.
 A CLI tool for easily installing and managing binary packages on Linux. It
 simplifies the process of:
 
-- Installing zipped binaries to `~/.local/bin`
+- Installing package files under `~/.ppkg` and linking binaries into
+  `~/.local/bin`
 - Resolving known packages from JSON catalogs (default: `https://repo.pmil.me`)
 - Handling GitHub release assets and named URL providers automatically
 

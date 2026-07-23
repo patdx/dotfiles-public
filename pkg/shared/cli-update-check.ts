@@ -117,7 +117,7 @@ export async function maybeNotifyCliUpdate(
   options: MaybeNotifyCliUpdateOptions = {},
 ): Promise<void> {
   const env = options.env ?? Deno.env
-  if (env.get('PATDX_PKG_NO_UPDATE_CHECK') === '1') return
+  if (env.get('PPKG_NO_UPDATE_CHECK') === '1') return
 
   const isTerminal = options.isTerminal ?? (() => Deno.stderr.isTerminal())
   if (!isTerminal()) return

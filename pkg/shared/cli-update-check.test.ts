@@ -61,7 +61,7 @@ Deno.test('maybeNotifyCliUpdate skips when env opt-out is set', async () => {
   let fetched = false
   let notices = 0
   await maybeNotifyCliUpdate({
-    env: { get: (key) => key === 'PATDX_PKG_NO_UPDATE_CHECK' ? '1' : undefined },
+    env: { get: (key) => key === 'PPKG_NO_UPDATE_CHECK' ? '1' : undefined },
     isTerminal: () => true,
     fetchMeta: async () => {
       fetched = true
