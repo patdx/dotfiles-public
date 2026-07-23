@@ -7,7 +7,7 @@
     "./lib": "./git-json-merge.ts"
   },
   "imports": {
-    "@david/dax": "jsr:@david/dax@^0.42.0",
+    "@david/dax": "jsr:@david/dax@^0.49.0",
     "@std/jsonc": "jsr:@std/jsonc@^1.0.2",
     "xdiff": "npm:xdiff@^0.2.11"
   },

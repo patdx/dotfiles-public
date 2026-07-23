@@ -15,13 +15,13 @@
     "check-schema": "deno run -A ./scripts/check-schema.ts"
   },
   "imports": {
-    "@std/cli": "jsr:@std/cli@^1.0.21",
-    "@std/fs": "jsr:@std/fs@^1.0.19",
-    "@std/path": "jsr:@std/path@^1.1.2",
-    "@valibot/to-json-schema": "npm:@valibot/to-json-schema@^1.6.0",
+    "@std/cli": "jsr:@std/cli@^1.0.32",
+    "@std/fs": "jsr:@std/fs@^1.0.24",
+    "@std/path": "jsr:@std/path@^1.1.6",
+    "@valibot/to-json-schema": "npm:@valibot/to-json-schema@^1.7.1",
     "create-desktop-shortcuts": "npm:create-desktop-shortcuts@^1.11.1",
-    "ofetch": "npm:ofetch@^1.4.1",
-    "valibot": "npm:valibot@^1.2.0"
+    "ofetch": "npm:ofetch@^1.5.1",
+    "valibot": "npm:valibot@^1.4.2"
   },
   "publish": {
     "include": ["LICENSE", "README.md", "**/*.ts"],
