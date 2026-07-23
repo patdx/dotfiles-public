@@ -6,6 +6,7 @@
     ".": "./cli.ts",
     "./install-binary": "./install-binary.ts",
     "./repo/caddy": "./repo/caddy.ts",
+    "./repo/codexbar": "./repo/codexbar.ts",
     "./repo/duckdb": "./repo/duckdb.ts",
     "./repo/git-credential-manager": "./repo/git-credential-manager.ts",
     "./repo/windsurf": "./repo/windsurf.ts",

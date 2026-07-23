@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import process from 'node:process'
 import { readGithubUrl } from './normalize-github-url.ts'
 import type { UrlCheckResult, UrlProvider } from './types.ts'
@@ -42,9 +43,34 @@ function couldBeBinary(url: string): boolean {
     NON_BINARY_EXTENSIONS.every((ext) => !url.endsWith(ext))
 }
 
-interface CheckerContext {
+export type LinuxLibc = 'musl' | 'gnu'
+
+export interface CheckerContext {
   platform: string
   arch: string
+  /** Host libc on Linux. Prefer matching release assets when both musl and gnu ship. */
+  libc?: LinuxLibc
+}
+
+const MUSL_LOADER_PATHS = [
+  '/lib/ld-musl-x86_64.so.1',
+  '/lib/ld-musl-aarch64.so.1',
+  '/lib/ld-musl-armhf.so.1',
+  '/lib/ld-musl-i386.so.1',
+]
+
+/** Detect musl (Alpine, etc.) vs gnu/glibc. Defaults to gnu when unsure. */
+export function detectLinuxLibc(): LinuxLibc {
+  for (const loader of MUSL_LOADER_PATHS) {
+    if (existsSync(loader)) return 'musl'
+  }
+  return 'gnu'
+}
+
+function resolveLibc(context: CheckerContext): LinuxLibc | undefined {
+  if (context.libc) return context.libc
+  if (context.platform === 'linux') return detectLinuxLibc()
+  return undefined
 }
 
 export function getPlatformIdentifiers(
@@ -68,7 +94,7 @@ export function getPlatformIdentifiers(
 
   // Add architecture aliases
   if (context.arch === 'x64') {
-    archs.push('amd64')
+    archs.push('amd64', 'x86_64')
   } else if (context.arch === 'arm64') {
     archs.push('aarch64')
   }
@@ -98,6 +124,7 @@ export function analyzeAssets(
   context: CheckerContext,
 ): AssetAnalysis[] {
   const { platforms, archs } = getPlatformIdentifiers(context)
+  const libc = resolveLibc(context)
 
   const analyzed = assets.map((asset) => {
     const name = asset.name.toLowerCase()
@@ -106,6 +133,7 @@ export function analyzeAssets(
     )
     const matchingArch = archs.find((arch) => name.includes(arch.toLowerCase()))
     const isBinary = couldBeBinary(name)
+    const isMuslAsset = name.includes('musl')
 
     // Calculate score based on heuristics
     let score = 0
@@ -121,8 +149,17 @@ export function analyzeAssets(
     if (name.includes('src') || name.includes('source')) score -= 3
     if (name.includes('debug') || name.includes('dbg')) score -= 2
     if (name.includes('dev') || name.includes('devel')) score -= 2
-    if (name.includes('symbols') || name.includes('pdb')) score -= 2
+    if (name.includes('symbols') || name.includes('pdb') || name.includes('dsym')) {
+      score -= 2
+    }
     if (name.includes('static') || name.includes('shared')) score -= 1
+
+    // Prefer the host libc when both musl and gnu builds ship
+    if (libc === 'musl') {
+      score += isMuslAsset ? 2 : -2
+    } else if (libc === 'gnu' && isMuslAsset) {
+      score -= 1
+    }
 
     return {
       name: asset.name,
@@ -145,9 +182,11 @@ export function generateErrorDetails(
   context: CheckerContext,
 ): string {
   const { platforms, archs } = getPlatformIdentifiers(context)
+  const libc = resolveLibc(context)
   return [
     `- Platform(s): ${platforms.join(', ')}`,
     `- Architecture(s): ${archs.join(', ')}`,
+    ...(libc ? [`- Libc: ${libc}`] : []),
     `\nAvailable assets:`,
     ...assetAnalysis.map((asset) =>
       [

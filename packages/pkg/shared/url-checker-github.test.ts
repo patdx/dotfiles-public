@@ -331,7 +331,60 @@ Deno.test('getPlatformIdentifiers - Linux x64', () => {
   assertEquals(platforms, ['linux'], 'Should only include linux platform')
   assertEquals(
     archs,
-    ['x64', 'amd64'],
-    'Should include x64 and its alias amd64',
+    ['x64', 'amd64', 'x86_64'],
+    'Should include x64 and its aliases amd64 and x86_64',
   )
+})
+
+const codexbarAssets: GithubRelease['assets'] = [
+  {
+    name: 'CodexBarCLI-v0.45.2-linux-musl-x86_64.tar.gz',
+    browser_download_url:
+      'https://github.com/steipete/CodexBar/releases/download/v0.45.2/CodexBarCLI-v0.45.2-linux-musl-x86_64.tar.gz',
+  },
+  {
+    name: 'CodexBarCLI-v0.45.2-linux-x86_64.tar.gz',
+    browser_download_url:
+      'https://github.com/steipete/CodexBar/releases/download/v0.45.2/CodexBarCLI-v0.45.2-linux-x86_64.tar.gz',
+  },
+  {
+    name: 'CodexBarCLI-v0.45.2-linux-x86_64.tar.gz.sha256',
+    browser_download_url:
+      'https://github.com/steipete/CodexBar/releases/download/v0.45.2/CodexBarCLI-v0.45.2-linux-x86_64.tar.gz.sha256',
+  },
+]
+
+Deno.test('findViableAsset - CodexBar CLI prefers glibc on gnu hosts', () => {
+  const context = { platform: 'linux', arch: 'x64', libc: 'gnu' as const }
+  const originalWarn = console.warn
+  console.warn = () => {}
+
+  try {
+    const asset = findViableAsset(
+      analyzeAssets(codexbarAssets, context),
+      context,
+    )
+    assertEquals(asset?.name, 'CodexBarCLI-v0.45.2-linux-x86_64.tar.gz')
+  } finally {
+    console.warn = originalWarn
+  }
+})
+
+Deno.test('findViableAsset - CodexBar CLI prefers musl on musl hosts', () => {
+  const context = { platform: 'linux', arch: 'x64', libc: 'musl' as const }
+  const originalWarn = console.warn
+  console.warn = () => {}
+
+  try {
+    const asset = findViableAsset(
+      analyzeAssets(codexbarAssets, context),
+      context,
+    )
+    assertEquals(
+      asset?.name,
+      'CodexBarCLI-v0.45.2-linux-musl-x86_64.tar.gz',
+    )
+  } finally {
+    console.warn = originalWarn
+  }
 })
