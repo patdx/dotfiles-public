@@ -21,6 +21,9 @@ jobs:
         with:
           deno-version: v2.x
 
+      - name: Check catalog JSON Schema is fresh
+        run: deno task check-schema
+
       - name: Run tests
         run: deno task test-all
 

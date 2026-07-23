@@ -1,0 +1,11 @@
+{
+  "imports": {
+    "wrangler": "npm:wrangler@^4.113.0"
+  },
+  "tasks": {
+    "deploy": "deno --allow-env --allow-run npm:wrangler deploy",
+    "deploy:dry": "deno --allow-env --allow-run npm:wrangler deploy --dry-run",
+    "dev": "deno npm:wrangler dev",
+    "start": "deno npm:wrangler dev"
+  }
+}

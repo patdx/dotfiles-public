@@ -46,8 +46,14 @@ A CLI tool for easily installing and managing binary packages on Linux. It
 simplifies the process of:
 
 - Installing zipped binaries to `~/.local/bin`
-- Managing known packages through a simple command interface
-- Handling GitHub release assets automatically
+- Resolving known packages from JSON catalogs (default: `https://repo.pmil.me`)
+- Handling GitHub release assets and named URL providers automatically
+
+The package catalog lives in this repo under [`repo/api/`](./repo/api/)
+(`repo.json` + `pkg/<name>.json`, schemas at `schema/v1/pkg.json` and
+`schema/v1/repo.json`) and is published under `https://repo.pmil.me/api/...`
+via [`repo-tools/`](./repo-tools/) (Deno + Wrangler). The site root is reserved
+for a future HTML front page.
 
 #### Usage
 
@@ -60,6 +66,10 @@ deno run -A --reload jsr:@patdx/pkg add --url https://github.com/duckdb/duckdb -
 
 # List installed packages
 deno run -A --reload jsr:@patdx/pkg list
+
+# Manage remotes
+deno run -A --reload jsr:@patdx/pkg repo list
+deno run -A --reload jsr:@patdx/pkg repo update
 
 # Remove a package
 deno run -A --reload jsr:@patdx/pkg remove duckdb

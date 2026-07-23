@@ -1,21 +1,24 @@
 {
   "workspace": [
-    "./packages/pkg",
-    "./packages/update",
-    "./packages/dotfiles",
-    "./packages/git-json-merge"
+    "./pkg",
+    "./update",
+    "./git-json-merge",
+    "./dotfiles",
+    "./repo-tools"
   ],
   "fmt": {
     "singleQuote": true,
     "semiColons": false
   },
   "tasks": {
-    "update-lockfile": "deno cache --lock-write",
+    "update-lockfile": "deno install",
     "link-check": "npx markdown-link-check README.md",
     "check-deps": "deno outdated",
     "check-deps-all": "deno outdated --recursive",
     "test-all": "deno task --recursive test",
-    "test-publish": "deno publish --dry-run"
+    "test-publish": "deno publish --dry-run",
+    "gen-schema": "deno task --cwd pkg gen-schema",
+    "check-schema": "deno task --cwd pkg check-schema"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.14"

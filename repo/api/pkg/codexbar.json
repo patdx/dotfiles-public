@@ -1,0 +1,12 @@
+{
+  "$schema": "https://repo.pmil.me/api/schema/v1/pkg.json",
+  "version": 1,
+  "name": "codexbar",
+  "binary_name": "codexbar",
+  "files": [
+    {
+      "url": "https://github.com/steipete/CodexBar",
+      "url_provider": "github"
+    }
+  ]
+}

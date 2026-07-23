@@ -1,0 +1,16 @@
+{
+  "$schema": "https://repo.pmil.me/api/schema/v1/pkg.json",
+  "version": 1,
+  "name": "windsurf",
+  "binary_name": "windsurf",
+  "files": [
+    {
+      "url": "https://windsurf-stable.codeium.com/api/update/linux-x64/stable/latest",
+      "url_provider": "windsurf-stable"
+    }
+  ],
+  "shortcut": {
+    "name": "Windsurf",
+    "icon": "resources/app/resources/linux/code.png"
+  }
+}

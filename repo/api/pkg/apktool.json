@@ -1,0 +1,20 @@
+{
+  "$schema": "https://repo.pmil.me/api/schema/v1/pkg.json",
+  "version": 1,
+  "name": "apktool",
+  "binary_name": "apktool",
+  "files": [
+    {
+      "url": "https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool",
+      "filename": "apktool",
+      "type": "raw",
+      "executable": true
+    },
+    {
+      "url": "https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.8.1.jar",
+      "filename": "apktool.jar",
+      "type": "raw"
+    }
+  ],
+  "post_install_message": "apktool has been installed successfully!\nTry running apktool via CLI."
+}

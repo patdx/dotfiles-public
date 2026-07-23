@@ -1,0 +1,30 @@
+{
+  "name": "@patdx/pkg",
+  "version": "0.6.0",
+  "license": "MIT",
+  "exports": {
+    ".": "./cli.ts",
+    "./install-binary": "./install-binary.ts",
+    "./resolve": "./resolve.ts"
+  },
+  "tasks": {
+    "cli": "deno run -A ./cli.ts",
+    "check-deps": "deno run -A jsr:@check/deps",
+    "test": "deno test --allow-read --allow-write --allow-run --allow-sys=homedir --allow-env --allow-net",
+    "gen-schema": "deno run -A ./scripts/gen-schema.ts",
+    "check-schema": "deno run -A ./scripts/check-schema.ts"
+  },
+  "imports": {
+    "@std/cli": "jsr:@std/cli@^1.0.21",
+    "@std/fs": "jsr:@std/fs@^1.0.19",
+    "@std/path": "jsr:@std/path@^1.1.2",
+    "@valibot/to-json-schema": "npm:@valibot/to-json-schema@^1.6.0",
+    "create-desktop-shortcuts": "npm:create-desktop-shortcuts@^1.11.1",
+    "ofetch": "npm:ofetch@^1.4.1",
+    "valibot": "npm:valibot@^1.2.0"
+  },
+  "publish": {
+    "include": ["LICENSE", "README.md", "**/*.ts"],
+    "exclude": ["scripts/", "**/*.test.ts"]
+  }
+}

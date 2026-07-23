@@ -1,0 +1,12 @@
+{
+  "$schema": "https://repo.pmil.me/api/schema/v1/pkg.json",
+  "version": 1,
+  "name": "caddy",
+  "binary_name": "caddy",
+  "files": [
+    {
+      "url": "https://github.com/caddyserver/caddy",
+      "url_provider": "github"
+    }
+  ]
+}

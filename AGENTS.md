@@ -1,29 +1,42 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with
+code in this repository.
 
 ## Project Overview
 
-This is a dotfiles repository containing three main JSR packages for Linux development environments:
+This is a dotfiles repository containing three main JSR packages for Linux
+development environments:
 
 - `@patdx/pkg` - CLI tool for installing and managing binary packages on Linux
 - `@patdx/update` - Script for performing system updates and package management
-- `@patdx/git-json-merge` - Git merge driver for automatically resolving JSON file conflicts
+- `@patdx/git-json-merge` - Git merge driver for automatically resolving JSON
+  file conflicts
 
 ## Architecture
 
-The repository is structured as a Deno workspace with four packages in the `packages/` directory:
+The repository is structured as a Deno workspace with members at the repo root:
 
-- `packages/pkg/` - Binary package manager with extensible repository system
-- `packages/update/` - System update utility 
-- `packages/git-json-merge/` - JSON merge driver for Git
-- `packages/dotfiles/` - Configuration and setup utilities
+- `pkg/` - Binary package manager (`@patdx/pkg`) with multi-source JSON catalog
+  resolver
+- `update/` - System update utility (`@patdx/update`)
+- `git-json-merge/` - JSON merge driver for Git (`@patdx/git-json-merge`)
+- `dotfiles/` - Deprecated; prefer `@patdx/update` and `@patdx/pkg`
+- `repo-tools/` - Workspace member (not published); Deno + Wrangler deploy
+  config for the catalog (assets from `../repo`)
+- `repo/` - Static assets root for `repo.pmil.me` (data only, not a workspace
+  member). Catalog JSON is under `api/` so the site root stays free for a
+  future HTML site: listing `api/repo.json`, packages `api/pkg/`, schemas
+  `api/schema/v1/` (`pkg.json`, `repo.json`)
 
-Each package is a self-contained JSR module with its own `deno.json` configuration.
+Each JSR package is a self-contained module with its own `deno.json`
+configuration. Deploy tooling lives in `repo-tools/` so it is not published
+with the JSON.
 
 ## Common Commands
 
 ### Development
+
 ```bash
 # Run tests for all packages
 deno task test-all
@@ -37,29 +50,34 @@ deno task update-lockfile
 # Test publishing (dry run)
 deno task test-publish
 
+# Regenerate catalog JSON Schema from Valibot
+deno task gen-schema
+
 # Check markdown links
 deno task link-check
 ```
 
 ### Package-specific commands
+
 ```bash
 # pkg package
-cd packages/pkg
+cd pkg
 deno task cli [command]
 deno task test
 
-# update package  
-cd packages/update
+# update package
+cd update
 deno task start
 deno task test
 
 # git-json-merge package
-cd packages/git-json-merge
+cd git-json-merge
 deno task test
 deno task test:e2e
 ```
 
 ### Running the tools directly
+
 ```bash
 # Install a package with pkg
 deno run -A --reload jsr:@patdx/pkg add windsurf
@@ -79,7 +97,12 @@ deno run --allow-read --allow-write jsr:@patdx/git-json-merge %A %O %B
 
 ## Package Management
 
-The `pkg` package maintains a repository of known packages in `packages/pkg/repo/` with TypeScript modules defining installation metadata for each supported binary.
+Known packages live as JSON under `repo/api/` (`repo.json` listing +
+`pkg/<name>.json`; schemas at `schema/v1/pkg.json` and
+`schema/v1/repo.json`). Live URLs are under `https://repo.pmil.me/api/...`.
+The CLI resolves them from builtin/local/remote sources and only executes
+named URL providers shipped in `@patdx/pkg`. Deploy with Deno from
+`repo-tools/` (`deno task deploy`).
 
 ## Platform Support
 

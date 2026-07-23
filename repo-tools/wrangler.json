@@ -1,0 +1,16 @@
+{
+  "$schema": "https://cdn.jsdelivr.net/npm/wrangler/config-schema.json",
+  "name": "patdx-pkg-repo",
+  "compatibility_date": "2026-07-23",
+  "workers_dev": true,
+  "routes": [
+    {
+      "pattern": "repo.pmil.me",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "../repo",
+    "not_found_handling": "404-page"
+  }
+}
