@@ -44,6 +44,7 @@ Deno.test('update runs in strict order without pnpm blocking claude', async () =
       'deno',
       'npm',
       'claude',
+      'pi',
       'cursor-agent',
       'copilot',
     ],
@@ -62,6 +63,7 @@ Deno.test('update runs in strict order without pnpm blocking claude', async () =
     ['deno', 'upgrade'],
     ['npm', 'update', '--global'],
     ['claude', 'update'],
+    ['pi', 'update', '--all'],
     ['cursor-agent', 'update'],
     ['copilot', 'update'],
   ])

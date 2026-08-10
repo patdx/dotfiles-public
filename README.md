@@ -110,6 +110,7 @@ deno run -A --reload jsr:@patdx/pkg@0.8.0 add windsurf
 A script for performing system updates on Linux that:
 
 - Runs system updates
+- Updates development tools and AI coding agents (including `pi update --all`)
 - Manages installed packages
 - Updates Git Credential Manager automatically
 

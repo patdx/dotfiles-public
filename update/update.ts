@@ -39,6 +39,7 @@ export async function update(
 
   await runIfAvailable(runtime, 'yt-dlp', ['yt-dlp', '-U'])
   await runIfAvailable(runtime, 'claude', ['claude', 'update'])
+  await runIfAvailable(runtime, 'pi', ['pi', 'update', '--all'])
   await runIfAvailable(runtime, 'opencode', ['opencode', 'upgrade'])
   await runIfAvailable(runtime, 'cursor-agent', ['cursor-agent', 'update'])
   await runIfAvailable(runtime, 'copilot', ['copilot', 'update'])
