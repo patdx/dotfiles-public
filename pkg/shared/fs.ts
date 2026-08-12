@@ -1,5 +1,5 @@
 import { copy, exists, move } from '@std/fs'
-import { join, resolve } from '@std/path'
+import { dirname, join, resolve } from '@std/path'
 import { homedir as getHomeDir } from 'node:os'
 
 export const PKG_HOME = resolve(getHomeDir(), '.ppkg')
@@ -50,8 +50,28 @@ export async function ensureBinInPath() {
 export async function downloadToFile(url: string, filePath: string) {
   console.log(`Downloading file from ${url} to ${filePath}`)
   const response = await fetch(url)
-  const file = await Deno.open(filePath, { create: true, write: true })
-  await response.body?.pipeTo(file.writable)
+  if (!response.ok) {
+    throw new Error(
+      `Download failed with HTTP ${response.status} ${response.statusText}: ${url}`,
+    )
+  }
+  if (!response.body) {
+    throw new Error(`Download returned no response body: ${url}`)
+  }
+
+  const temporaryPath = await Deno.makeTempFile({
+    dir: dirname(filePath),
+    prefix: '.ppkg-download-',
+  })
+  try {
+    const file = await Deno.open(temporaryPath, { write: true })
+    await response.body.pipeTo(file.writable)
+    await Deno.rename(temporaryPath, filePath)
+  } catch (error) {
+    await Deno.remove(temporaryPath).catch(() => {})
+    throw error
+  }
+
   console.log(`Downloaded file to ${filePath}`)
 }
 
