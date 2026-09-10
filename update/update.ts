@@ -29,85 +29,177 @@ if (import.meta.main) {
 export async function update(
   runtime: UpdateRuntime = createRuntime(),
 ): Promise<void> {
-  const initialNpmPackages = await getGlobalNpmPackages(runtime)
-  const hasFnm = await runtime.commandExists('fnm')
+  const failures: string[] = []
+  const step = async (
+    label: string,
+    fn: () => Promise<unknown>,
+  ): Promise<void> => {
+    try {
+      await fn()
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.error(`Update step failed (${label}): ${message}`)
+      failures.push(label)
+    }
+  }
 
-  await runIfAvailable(runtime, 'bun', ['bun', 'upgrade'])
-  await runIfAvailable(runtime, 'deno', ['deno', 'upgrade'])
+  let initialNpmPackages: string[] = []
+  await step('npm package inventory', async () => {
+    initialNpmPackages = await getGlobalNpmPackages(runtime)
+  })
 
-  await updateNodeEcosystem(runtime, hasFnm, initialNpmPackages)
+  let hasFnm = false
+  await step('fnm detection', async () => {
+    hasFnm = await runtime.commandExists('fnm')
+  })
 
-  await runIfAvailable(runtime, 'yt-dlp', ['yt-dlp', '-U'])
-  await runIfAvailable(runtime, 'claude', ['claude', 'update'])
-  await runIfAvailable(runtime, 'pi', ['pi', 'update', '--all'])
-  await runIfAvailable(runtime, 'opencode', ['opencode', 'upgrade'])
-  await runIfAvailable(runtime, 'cursor-agent', ['cursor-agent', 'update'])
-  await runIfAvailable(runtime, 'copilot', ['copilot', 'update'])
-  await runIfAvailable(runtime, 'brew', ['brew', 'upgrade'])
+  await step('bun', () => runIfAvailable(runtime, 'bun', ['bun', 'upgrade']))
+  await step(
+    'deno',
+    () => runIfAvailable(runtime, 'deno', ['deno', 'upgrade']),
+  )
+
+  await updateNodeEcosystem(runtime, hasFnm, initialNpmPackages, step)
+
+  await step(
+    'yt-dlp',
+    () => runIfAvailable(runtime, 'yt-dlp', ['yt-dlp', '-U']),
+  )
+  await step(
+    'claude',
+    () => runIfAvailable(runtime, 'claude', ['claude', 'update']),
+  )
+  await step(
+    'pi',
+    () => runIfAvailable(runtime, 'pi', ['pi', 'update', '--all']),
+  )
+  await step(
+    'opencode',
+    () => runIfAvailable(runtime, 'opencode', ['opencode', 'upgrade']),
+  )
+  await step(
+    'cursor-agent',
+    () => runIfAvailable(runtime, 'cursor-agent', ['cursor-agent', 'update']),
+  )
+  await step(
+    'copilot',
+    () => runIfAvailable(runtime, 'copilot', ['copilot', 'update']),
+  )
+  await step(
+    'brew',
+    () => runIfAvailable(runtime, 'brew', ['brew', 'upgrade']),
+  )
 
   if (runtime.platform === 'linux') {
-    await updateLinuxPackages(runtime)
+    await updateLinuxPackages(runtime, step)
+  }
+
+  if (failures.length > 0) {
+    console.error(
+      `Update completed with ${failures.length} failure(s): ${
+        failures.join(', ')
+      }`,
+    )
+    throw new Error(
+      `Update completed with ${failures.length} failure(s): ${
+        failures.join(', ')
+      }`,
+    )
   }
 
   console.log('Update completed successfully!')
 }
 
+type StepRunner = (
+  label: string,
+  fn: () => Promise<unknown>,
+) => Promise<void>
+
 async function updateNodeEcosystem(
   runtime: UpdateRuntime,
   hasFnm: boolean,
   initialNpmPackages: string[],
+  step: StepRunner,
 ): Promise<void> {
   if (hasFnm) {
-    await runtime.run(['fnm', 'install', FNM_NODE_VERSION])
-    await runtime.run(['fnm', 'default', FNM_NODE_VERSION])
+    await step(
+      'fnm install',
+      () => runtime.run(['fnm', 'install', FNM_NODE_VERSION]),
+    )
+    await step(
+      'fnm default',
+      () => runtime.run(['fnm', 'default', FNM_NODE_VERSION]),
+    )
   }
 
-  const npmAvailable = await nodeCommandExists(runtime, hasFnm, 'npm')
+  let npmAvailable = false
+  await step('npm check', async () => {
+    npmAvailable = await nodeCommandExists(runtime, hasFnm, 'npm')
+  })
   if (npmAvailable) {
-    await restoreMissingGlobalNpmPackages(
-      runtime,
-      initialNpmPackages,
-      hasFnm,
+    await step(
+      'npm restore missing packages',
+      () =>
+        restoreMissingGlobalNpmPackages(
+          runtime,
+          initialNpmPackages,
+          hasFnm,
+        ),
     )
-    await runtime.run(prefixWithFnm(hasFnm, ['npm', 'update', '--global']))
-  }
-
-  const corepackAvailable = await nodeCommandExists(
-    runtime,
-    hasFnm,
-    'corepack',
-  )
-  if (corepackAvailable) {
-    await runtime.run(
-      prefixWithFnm(
-        hasFnm,
-        ['corepack', 'install', '--global', 'pnpm@latest'],
-      ),
+    await step(
+      'npm update --global',
+      () => runtime.run(prefixWithFnm(hasFnm, ['npm', 'update', '--global'])),
     )
   }
 
-  const pnpmAvailable = await nodeCommandExists(runtime, hasFnm, 'pnpm')
+  let pnpmAvailable = false
+  await step('pnpm check', async () => {
+    pnpmAvailable = await nodeCommandExists(runtime, hasFnm, 'pnpm')
+  })
   if (pnpmAvailable) {
-    await runtime.run(prefixWithFnm(hasFnm, ['pnpm', 'update', '--global']))
+    await step(
+      'pnpm self-update',
+      () => runtime.run(prefixWithFnm(hasFnm, ['pnpm', 'self-update'])),
+    )
+    await step(
+      'pnpm update --global',
+      () => runtime.run(prefixWithFnm(hasFnm, ['pnpm', 'update', '--global'])),
+    )
   }
 }
 
-async function updateLinuxPackages(runtime: UpdateRuntime): Promise<void> {
-  if (await runtime.commandExists('git-credential-manager')) {
-    await runtime.updateGitCredentialManager()
-  }
+async function updateLinuxPackages(
+  runtime: UpdateRuntime,
+  step: StepRunner,
+): Promise<void> {
+  await step('git-credential-manager', async () => {
+    if (await runtime.commandExists('git-credential-manager')) {
+      await runtime.updateGitCredentialManager()
+    }
+  })
 
-  await runIfAvailable(runtime, 'snap', ['sudo', 'snap', 'refresh'])
-  await runIfAvailable(runtime, 'dnf', [
-    'sudo',
+  await step(
+    'snap',
+    () => runIfAvailable(runtime, 'snap', ['sudo', 'snap', 'refresh']),
+  )
+  await step(
     'dnf',
-    'upgrade',
-    '--refresh',
-  ])
+    () =>
+      runIfAvailable(runtime, 'dnf', [
+        'sudo',
+        'dnf',
+        'upgrade',
+        '--refresh',
+      ]),
+  )
 
-  if (await runtime.commandExists('apt')) {
-    await runtime.run(['sudo', 'apt', 'update'])
-    await runtime.run(['sudo', 'apt', 'upgrade'])
+  let hasApt = false
+  await step('apt check', async () => {
+    hasApt = await runtime.commandExists('apt')
+  })
+  if (hasApt) {
+    await step('apt update', () => runtime.run(['sudo', 'apt', 'update']))
+    await step('apt upgrade', () => runtime.run(['sudo', 'apt', 'upgrade']))
   }
 }
 
