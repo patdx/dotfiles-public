@@ -86,6 +86,14 @@ export async function update(
     () => runIfAvailable(runtime, 'copilot', ['copilot', 'update']),
   )
   await step(
+    'cmd',
+    () => runIfAvailable(runtime, 'cmd', ['cmd', 'update']),
+  )
+  await step(
+    'herdr',
+    () => runIfAvailable(runtime, 'herdr', ['herdr', 'update']),
+  )
+  await step(
     'brew',
     () => runIfAvailable(runtime, 'brew', ['brew', 'upgrade']),
   )

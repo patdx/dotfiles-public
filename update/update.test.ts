@@ -54,6 +54,8 @@ Deno.test('update runs in strict order without pnpm blocking claude', async () =
       'pi',
       'cursor-agent',
       'copilot',
+      'cmd',
+      'herdr',
     ],
     quietResults: {
       'npm ls -g --json': {
@@ -73,6 +75,8 @@ Deno.test('update runs in strict order without pnpm blocking claude', async () =
     ['pi', 'update', '--all'],
     ['cursor-agent', 'update'],
     ['copilot', 'update'],
+    ['cmd', 'update'],
+    ['herdr', 'update'],
   ])
 })
 
