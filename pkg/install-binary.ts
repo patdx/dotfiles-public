@@ -1,3 +1,4 @@
+import { extractTarXz } from './shared/fs.ts'
 /**
  * Install arbitrary zipped binaries on Linux
  * @module
@@ -60,7 +61,9 @@ async function downloadAndExtractFile(
     fileOptions.url_provider,
   )
   const fileType = fileOptions.type ?? resolvedFile.type
-  const downloadFilename = `download.${fileType === 'targz' ? 'tar.gz' : 'zip'}`
+  const downloadFilename = `download.${
+    fileType === 'targz' ? 'tar.gz' : fileType === 'tarxz' ? 'tar.xz' : 'zip'
+  }`
 
   await downloadToFile(
     resolvedFile.binaryUrl,
@@ -71,7 +74,9 @@ async function downloadAndExtractFile(
   const extractDir = join(tempDir.path, 'extracted')
   await Deno.mkdir(extractDir, { recursive: true })
 
-  if (fileType === 'targz') {
+  if (fileType === 'tarxz') {
+    await extractTarXz(downloadPath, extractDir)
+  } else if (fileType === 'targz') {
     await extractTarGz(downloadPath, extractDir)
   } else {
     await extractZip(downloadPath, extractDir)

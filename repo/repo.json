@@ -3,11 +3,12 @@
   "version": 1,
   "packages": [
     "apktool",
+    "blender",
     "caddy",
     "codexbar",
     "duckdb",
     "git-credential-manager",
     "windsurf"
   ],
-  "min_cli_version": "0.7.2"
+  "min_cli_version": "0.9.0"
 }

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://repo.pmil.me/package.schema.json",
+  "version": 1,
+  "name": "blender",
+  "binary_name": "blender",
+  "files": [
+    {
+      "url": "https://www.blender.org/download/",
+      "url_provider": "blender-stable"
+    }
+  ],
+  "shortcut": {
+    "name": "Blender",
+    "icon": "blender.svg"
+  }
+}

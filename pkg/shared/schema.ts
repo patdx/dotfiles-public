@@ -13,7 +13,7 @@ export const DEFAULT_REMOTE_REPO = 'https://repo.pmil.me'
 export interface FileOptions {
   url: string
   filename?: string
-  type?: 'zip' | 'targz' | 'raw'
+  type?: 'zip' | 'targz' | 'tarxz' | 'raw'
   executable?: boolean
   url_provider?: string
 }
@@ -43,7 +43,7 @@ export interface RepoListing {
 const FileOptionsSchema: v.GenericSchema<FileOptions> = v.object({
   url: v.string(),
   filename: v.optional(v.string()),
-  type: v.optional(v.picklist(['zip', 'targz', 'raw'] as const)),
+  type: v.optional(v.picklist(['zip', 'targz', 'tarxz', 'raw'] as const)),
   executable: v.optional(v.boolean()),
   url_provider: v.optional(v.string()),
 })

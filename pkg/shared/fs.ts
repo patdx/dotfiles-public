@@ -95,6 +95,13 @@ export async function extractZip(
   await runArchiveCommand('unzip', ['-o', zipPath, '-d', dir])
 }
 
+export async function extractTarXz(
+  tarPath: string,
+  dir: string,
+): Promise<void> {
+  await runArchiveCommand('tar', ['-xJf', tarPath, '-C', dir])
+}
+
 export async function extractTarGz(
   tarPath: string,
   dir: string,

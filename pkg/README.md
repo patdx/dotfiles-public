@@ -10,8 +10,8 @@ The published binary name is **`ppkg`** (JSR package remains `@patdx/pkg`).
 Pin a published version (see [JSR](https://jsr.io/@patdx/pkg) for the latest):
 
 ```sh
-deno install -g -A -n ppkg jsr:@patdx/pkg@0.8.0
-# or: deno run -A jsr:@patdx/pkg@0.8.0 self-install
+deno install -g -A -n ppkg jsr:@patdx/pkg@0.9.0
+# or: deno run -A jsr:@patdx/pkg@0.9.0 self-install
 ```
 
 If Deno rejects the version because it is newer than the
@@ -19,7 +19,7 @@ If Deno rejects the version because it is newer than the
 (default 24 hours), retry with `--min-dep-age=0`:
 
 ```sh
-deno install -g -A -n ppkg --min-dep-age=0 jsr:@patdx/pkg@0.8.0
+deno install -g -A -n ppkg --min-dep-age=0 jsr:@patdx/pkg@0.9.0
 ```
 
 Ensure `~/.deno/bin` is on your `PATH`. Update later with `ppkg self-update`
@@ -56,7 +56,7 @@ raw URL (not in the catalog) are skipped for now.
 One-liner without a global install:
 
 ```sh
-deno run -A --reload jsr:@patdx/pkg@0.8.0 add windsurf
+deno run -A --reload jsr:@patdx/pkg@0.9.0 add windsurf
 ```
 
 ## Catalog
@@ -69,3 +69,21 @@ Catalog layout (static files at site root):
 
 HTML browse pages: `/` and `/package/<name>` (shared `/site.css`, `/site.js`).
 In this monorepo, run `deno task gen-site` after editing `repo/package/*.json`.
+
+### Blender
+
+`ppkg add blender` installs the official stable Linux build with a desktop
+shortcut. The `blender-stable` provider reads Blender's download page to resolve
+its current version, so `ppkg outdated` and `ppkg update blender` track future
+stable releases. Extraction requires `tar` with xz support.
+
+When using an unpublished provider from this checkout, install the local CLI:
+
+```sh
+deno install -g -A -f -n ppkg --config ./deno.json ./pkg/cli.ts
+```
+
+Run that command from the repository root. The local CLI automatically uses
+`repo/` as its first catalog source. Keep the checkout in place;
+`ppkg self-update` replaces this local CLI with the published JSR version, which
+must include the Blender provider before switching back.

@@ -1,3 +1,4 @@
+import { blenderProvider } from './url-checker-blender.ts'
 import { directProvider } from './url-checker-direct.ts'
 import { githubProvider } from './url-checker-github.ts'
 import { windsurfStableProvider } from './url-checker-windsurf.ts'
@@ -5,7 +6,7 @@ import { windsurfStableProvider } from './url-checker-windsurf.ts'
 export interface UrlCheckResult {
   binaryUrl: string
   version?: string
-  type: 'zip' | 'targz'
+  type: 'zip' | 'targz' | 'tarxz'
   urlType: string
 }
 
@@ -15,6 +16,7 @@ export interface UrlProvider {
 }
 
 const providers: UrlProvider[] = [
+  blenderProvider,
   githubProvider,
   windsurfStableProvider,
   directProvider,

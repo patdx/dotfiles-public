@@ -28,6 +28,7 @@
             "enum": [
               "zip",
               "targz",
+              "tarxz",
               "raw"
             ],
             "type": "string"
