@@ -145,12 +145,20 @@ async function updateNodeEcosystem(
     npmAvailable = await nodeCommandExists(runtime, hasFnm, 'npm')
   })
   if (npmAvailable) {
+    // Updating global Corepack can recreate shims over standalone pnpm.
+    await step(
+      'npm uninstall corepack',
+      () =>
+        runtime.run(
+          prefixWithFnm(hasFnm, ['npm', 'uninstall', '--global', 'corepack']),
+        ),
+    )
     await step(
       'npm restore missing packages',
       () =>
         restoreMissingGlobalNpmPackages(
           runtime,
-          initialNpmPackages,
+          initialNpmPackages.filter((pkg) => pkg !== 'corepack'),
           hasFnm,
         ),
     )
@@ -162,16 +170,18 @@ async function updateNodeEcosystem(
 
   let pnpmAvailable = false
   await step('pnpm check', async () => {
-    pnpmAvailable = await nodeCommandExists(runtime, hasFnm, 'pnpm')
+    // Standalone pnpm belongs to the shell, not fnm's Node installation.
+    // fnm exec can shadow it with a leftover Corepack shim.
+    pnpmAvailable = await runtime.commandExists('pnpm')
   })
   if (pnpmAvailable) {
     await step(
       'pnpm self-update',
-      () => runtime.run(prefixWithFnm(hasFnm, ['pnpm', 'self-update'])),
+      () => runtime.run(['pnpm', 'self-update']),
     )
     await step(
       'pnpm update --global',
-      () => runtime.run(prefixWithFnm(hasFnm, ['pnpm', 'update', '--global'])),
+      () => runtime.run(['pnpm', 'update', '--global']),
     )
   }
 }

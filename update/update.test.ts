@@ -70,6 +70,7 @@ Deno.test('update runs in strict order without pnpm blocking claude', async () =
   assertEquals(calls, [
     ['bun', 'upgrade'],
     ['deno', 'upgrade'],
+    ['npm', 'uninstall', '--global', 'corepack'],
     ['npm', 'update', '--global'],
     ['claude', 'update'],
     ['pi', 'update', '--all'],
@@ -80,11 +81,12 @@ Deno.test('update runs in strict order without pnpm blocking claude', async () =
   ])
 })
 
-Deno.test('update runs node ecosystem through fnm context', async () => {
+Deno.test('update removes Corepack without restoring it and uses standalone pnpm', async () => {
   const initialPackages = JSON.stringify({
     dependencies: {
       claude: {},
       opencode: {},
+      corepack: {},
     },
   })
   const currentPackages = JSON.stringify({
@@ -94,7 +96,7 @@ Deno.test('update runs node ecosystem through fnm context', async () => {
   })
 
   const { runtime, calls } = createMockRuntime({
-    existingCommands: ['fnm', 'npm'],
+    existingCommands: ['fnm', 'npm', 'pnpm'],
     quietResults: {
       'npm ls -g --json': {
         code: 0,
@@ -120,10 +122,20 @@ Deno.test('update runs node ecosystem through fnm context', async () => {
   assertEquals(calls, [
     ['fnm', 'install', '24'],
     ['fnm', 'default', '24'],
+    [
+      'fnm',
+      'exec',
+      '--using',
+      '24',
+      'npm',
+      'uninstall',
+      '--global',
+      'corepack',
+    ],
     ['fnm', 'exec', '--using', '24', 'npm', 'install', '-g', 'opencode'],
     ['fnm', 'exec', '--using', '24', 'npm', 'update', '--global'],
-    ['fnm', 'exec', '--using', '24', 'pnpm', 'self-update'],
-    ['fnm', 'exec', '--using', '24', 'pnpm', 'update', '--global'],
+    ['pnpm', 'self-update'],
+    ['pnpm', 'update', '--global'],
   ])
 })
 
@@ -169,6 +181,7 @@ Deno.test('update uses pnpm self-update without corepack', async () => {
   await update(runtime)
 
   assertEquals(calls, [
+    ['npm', 'uninstall', '--global', 'corepack'],
     ['npm', 'update', '--global'],
     ['pnpm', 'self-update'],
     ['pnpm', 'update', '--global'],
