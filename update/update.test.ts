@@ -1,13 +1,17 @@
 import { assertEquals, assertRejects } from '@std/assert'
 import type { CommandResult, UpdateRuntime } from './update.ts'
-import { prefixWithFnm, update } from './update.ts'
+import { parseGlobalNpmPackages, prefixWithFnm, update } from './update.ts'
 
 interface MockRuntimeOptions {
   platform?: string
   existingCommands?: string[]
-  quietResults?: Record<string, CommandResult>
+  /** Queues return one result per call; the last result repeats. */
+  quietResults?: Record<string, CommandResult | CommandResult[]>
   failingCommands?: string[]
 }
+
+const FNM_GLOBAL_NODE_MODULES =
+  '/home/pm/.local/share/fnm/node-versions/v24.22.0/installation/lib/node_modules'
 
 function createMockRuntime(
   options: MockRuntimeOptions = {},
@@ -32,10 +36,14 @@ function createMockRuntime(
         }
         return Promise.resolve()
       },
-      runQuiet: (command: string[]) =>
-        Promise.resolve(
-          quietResults[command.join(' ')] ?? { code: 1, stdout: '' },
-        ),
+      runQuiet: (command: string[]) => {
+        const result = quietResults[command.join(' ')]
+        if (Array.isArray(result)) {
+          const next = result.length > 1 ? result.shift() : result[0]
+          return Promise.resolve(next ?? { code: 1, stdout: '' })
+        }
+        return Promise.resolve(result ?? { code: 1, stdout: '' })
+      },
       updateGitCredentialManager: () => {
         calls.push(['gcm-update'])
         return Promise.resolve()
@@ -252,6 +260,143 @@ Deno.test('apt upgrade still runs when apt update fails', async () => {
     ['sudo', 'apt', 'update'],
     ['sudo', 'apt', 'upgrade'],
   ])
+})
+
+Deno.test('update restores linked global packages from their local source', async () => {
+  const initialPackages = JSON.stringify({
+    dependencies: {
+      svgma: {
+        version: '0.1.0',
+        resolved: 'file:../../../../../../../../dev/home/svgma',
+      },
+      typescript: { version: '7.0.2' },
+    },
+  })
+  const currentPackages = JSON.stringify({
+    dependencies: {
+      typescript: { version: '7.0.2' },
+    },
+  })
+
+  const { runtime, calls } = createMockRuntime({
+    existingCommands: ['npm'],
+    quietResults: {
+      'npm root -g': { code: 0, stdout: `${FNM_GLOBAL_NODE_MODULES}\n` },
+      'npm ls -g --json': [
+        { code: 0, stdout: initialPackages },
+        { code: 0, stdout: currentPackages },
+      ],
+    },
+  })
+
+  await update(runtime)
+
+  assertEquals(calls, [
+    ['npm', 'uninstall', '--global', 'corepack'],
+    ['npm', 'install', '-g', '/home/pm/dev/home/svgma'],
+    ['npm', 'update', '--global'],
+  ])
+})
+
+Deno.test('update keeps restoring packages when a local package fails', async () => {
+  const initialPackages = JSON.stringify({
+    dependencies: {
+      gone: { version: '0.1.0', resolved: 'file:/home/pm/dev/home/gone' },
+      typescript: { version: '7.0.2' },
+    },
+  })
+  const emptyPackages = JSON.stringify({ dependencies: {} })
+
+  const { runtime, calls } = createMockRuntime({
+    existingCommands: ['npm'],
+    failingCommands: ['npm install -g /home/pm/dev/home/gone'],
+    quietResults: {
+      'npm ls -g --json': [
+        { code: 0, stdout: initialPackages },
+        { code: 0, stdout: emptyPackages },
+      ],
+    },
+  })
+
+  // An unrestorable local package is reported as a warning, not a failure.
+  await update(runtime)
+
+  assertEquals(calls, [
+    ['npm', 'uninstall', '--global', 'corepack'],
+    ['npm', 'install', '-g', '/home/pm/dev/home/gone'],
+    ['npm', 'install', '-g', 'typescript'],
+    ['npm', 'update', '--global'],
+  ])
+})
+
+Deno.test('one unavailable registry package does not block the others', async () => {
+  const initialPackages = JSON.stringify({
+    dependencies: {
+      unpublished: { version: '1.0.0' },
+      typescript: { version: '7.0.2' },
+    },
+  })
+  const emptyPackages = JSON.stringify({ dependencies: {} })
+
+  const { runtime, calls } = createMockRuntime({
+    existingCommands: ['npm'],
+    failingCommands: ['npm install -g unpublished'],
+    quietResults: {
+      'npm ls -g --json': [
+        { code: 0, stdout: initialPackages },
+        { code: 0, stdout: emptyPackages },
+      ],
+    },
+  })
+
+  const error = await assertRejects(() => update(runtime), Error)
+  assertEquals(error.message.includes('npm restore missing packages'), true)
+
+  assertEquals(calls, [
+    ['npm', 'uninstall', '--global', 'corepack'],
+    ['npm', 'install', '-g', 'unpublished'],
+    ['npm', 'install', '-g', 'typescript'],
+    ['npm', 'update', '--global'],
+  ])
+})
+
+Deno.test('parseGlobalNpmPackages resolves local installs', () => {
+  const stdout = JSON.stringify({
+    dependencies: {
+      svgma: {
+        version: '0.1.0',
+        resolved: 'file:../../../../../../../../dev/home/svgma',
+      },
+      '@scope/linked': {
+        version: '1.0.0',
+        link: true,
+        resolved: '/home/pm/dev/home/linked',
+      },
+      typescript: { version: '7.0.2' },
+      tarball: { resolved: 'https://example.com/package.tgz' },
+    },
+  })
+
+  assertEquals(parseGlobalNpmPackages(stdout, FNM_GLOBAL_NODE_MODULES), [
+    { name: 'svgma', local: true, localPath: '/home/pm/dev/home/svgma' },
+    {
+      name: '@scope/linked',
+      local: true,
+      localPath: '/home/pm/dev/home/linked',
+    },
+    { name: 'typescript', local: false, localPath: undefined },
+    { name: 'tarball', local: false, localPath: undefined },
+  ])
+
+  // A linked package without a resolvable path still counts as local.
+  assertEquals(
+    parseGlobalNpmPackages(
+      JSON.stringify({ dependencies: { linked: { link: true } } }),
+    ),
+    [{ name: 'linked', local: true, localPath: undefined }],
+  )
+
+  assertEquals(parseGlobalNpmPackages('{"name":"lib"}'), undefined)
 })
 
 Deno.test('prefixWithFnm only rewrites node-managed commands when enabled', () => {

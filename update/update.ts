@@ -14,6 +14,19 @@ export interface CommandResult {
   stdout: string
 }
 
+/**
+ * A globally installed npm package. Packages installed from a local directory
+ * (`npm link` or `npm install -g <dir>`) are not published on the registry, so
+ * they have to be restored from their source path instead.
+ */
+export interface GlobalNpmPackage {
+  name: string
+  /** True when the package is linked to a local directory. */
+  local: boolean
+  /** Absolute path to the local source directory, when npm reported one. */
+  localPath?: string
+}
+
 export interface UpdateRuntime {
   platform: string
   commandExists(command: string): Promise<boolean>
@@ -43,9 +56,9 @@ export async function update(
     }
   }
 
-  let initialNpmPackages: string[] = []
+  let initialNpmPackages: GlobalNpmPackage[] = []
   await step('npm package inventory', async () => {
-    initialNpmPackages = await getGlobalNpmPackages(runtime)
+    initialNpmPackages = await getGlobalNpmPackageInventory(runtime)
   })
 
   let hasFnm = false
@@ -126,7 +139,7 @@ type StepRunner = (
 async function updateNodeEcosystem(
   runtime: UpdateRuntime,
   hasFnm: boolean,
-  initialNpmPackages: string[],
+  initialNpmPackages: GlobalNpmPackage[],
   step: StepRunner,
 ): Promise<void> {
   if (hasFnm) {
@@ -158,7 +171,7 @@ async function updateNodeEcosystem(
       () =>
         restoreMissingGlobalNpmPackages(
           runtime,
-          initialNpmPackages.filter((pkg) => pkg !== 'corepack'),
+          initialNpmPackages.filter((pkg) => pkg.name !== 'corepack'),
           hasFnm,
         ),
     )
@@ -262,16 +275,16 @@ async function runIfAvailable(
 
 async function restoreMissingGlobalNpmPackages(
   runtime: UpdateRuntime,
-  initialPackages: string[],
+  initialPackages: GlobalNpmPackage[],
   useFnmNode: boolean,
-) {
+): Promise<void> {
   if (initialPackages.length === 0) {
     return
   }
 
   const currentPackages = await getGlobalNpmPackages(runtime, useFnmNode)
   const missingPackages = initialPackages.filter((pkg) =>
-    !currentPackages.includes(pkg)
+    !currentPackages.includes(pkg.name)
   )
 
   if (missingPackages.length === 0) {
@@ -281,21 +294,176 @@ async function restoreMissingGlobalNpmPackages(
 
   console.log(
     'Reinstalling missing global packages:',
-    missingPackages.join(', '),
+    missingPackages.map(describeGlobalNpmPackage).join(', '),
   )
-  await runtime.run(
-    prefixWithFnm(useFnmNode, ['npm', 'install', '-g', ...missingPackages]),
-  )
+
+  // Install one package at a time. Installing them in a single batch means one
+  // unavailable package (for example a local package that is not on the
+  // registry) would abort the whole install and leave every other package
+  // missing.
+  const failures: GlobalNpmPackage[] = []
+  for (const pkg of missingPackages) {
+    const installed = await reinstallGlobalNpmPackage(runtime, pkg, useFnmNode)
+    if (!installed) {
+      failures.push(pkg)
+    }
+  }
+
+  // Local packages are expected to be unavailable on the registry: they were
+  // already reported as warnings and there is nothing else to fall back to.
+  const registryFailures = failures.filter((pkg) => !pkg.local)
+  if (registryFailures.length > 0) {
+    throw new Error(
+      `Failed to reinstall ${registryFailures.length} global npm package(s): ${
+        registryFailures.map((pkg) => pkg.name).join(', ')
+      }`,
+    )
+  }
+}
+
+function describeGlobalNpmPackage(pkg: GlobalNpmPackage): string {
+  if (!pkg.local) {
+    return pkg.name
+  }
+
+  return `${pkg.name} (local: ${pkg.localPath ?? 'path unknown'})`
+}
+
+/**
+ * Restores a single global npm package. Linked/local packages are installed
+ * from their source directory rather than by name, because they are not
+ * published on the npm registry.
+ */
+async function reinstallGlobalNpmPackage(
+  runtime: UpdateRuntime,
+  pkg: GlobalNpmPackage,
+  useFnmNode: boolean,
+): Promise<boolean> {
+  const target = pkg.localPath ?? pkg.name
+
+  try {
+    await runtime.run(
+      prefixWithFnm(useFnmNode, ['npm', 'install', '-g', target]),
+    )
+    return true
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (pkg.local) {
+      const source = pkg.localPath ? ` from ${pkg.localPath}` : ''
+      console.log(
+        `Warning: Could not restore local package ${pkg.name}${source}: ${message}`,
+      )
+      console.log(`Install it manually with: npm install -g ${target}`)
+    } else {
+      console.log(`Warning: Could not restore package ${pkg.name}: ${message}`)
+    }
+    return false
+  }
+}
+
+/**
+ * Parses `npm ls -g --json` output.
+ *
+ * npm reports local installs as `file:` paths that are relative to the global
+ * `node_modules` directory in use at the time, so that root has to be passed in
+ * to resolve them to an absolute path. Returns undefined when the output does
+ * not have the expected shape.
+ */
+export function parseGlobalNpmPackages(
+  stdout: string,
+  globalNodeModulesRoot?: string,
+): GlobalNpmPackage[] | undefined {
+  const json: unknown = JSON.parse(stdout)
+  if (!isRecord(json) || !isRecord(json.dependencies)) {
+    return undefined
+  }
+
+  return Object.entries(json.dependencies).map(([name, value]) => {
+    const entry = isRecord(value) ? value : {}
+    const source = getLocalSource(entry)
+
+    return {
+      name,
+      local: entry.link === true || source !== undefined,
+      localPath: source === undefined
+        ? undefined
+        : resolveLocalSource(source, globalNodeModulesRoot),
+    }
+  })
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function getLocalSource(entry: Record<string, unknown>): string | undefined {
+  const resolved = entry.resolved
+  if (typeof resolved !== 'string' || resolved === '') {
+    return undefined
+  }
+
+  if (entry.link === true || resolved.startsWith('file:')) {
+    const source = resolved.replace(/^file:/, '')
+    return source === '' ? undefined : source
+  }
+
+  return undefined
+}
+
+function resolveLocalSource(
+  source: string,
+  globalNodeModulesRoot?: string,
+): string | undefined {
+  if (source.startsWith('/')) {
+    return normalizeAbsolutePath(source)
+  }
+
+  if (globalNodeModulesRoot === undefined) {
+    return undefined
+  }
+
+  return normalizeAbsolutePath(`${globalNodeModulesRoot}/${source}`)
+}
+
+function normalizeAbsolutePath(path: string): string {
+  const segments: string[] = []
+  for (const segment of path.split('/')) {
+    if (segment === '' || segment === '.') {
+      continue
+    }
+    if (segment === '..') {
+      segments.pop()
+      continue
+    }
+    segments.push(segment)
+  }
+
+  return `/${segments.join('/')}`
 }
 
 async function getGlobalNpmPackages(
   runtime: UpdateRuntime,
   useFnmNode: boolean = false,
 ): Promise<string[]> {
+  const packages = await getGlobalNpmPackageInventory(runtime, useFnmNode)
+  return packages.map((pkg) => pkg.name)
+}
+
+async function getGlobalNpmPackageInventory(
+  runtime: UpdateRuntime,
+  useFnmNode: boolean = false,
+): Promise<GlobalNpmPackage[]> {
   try {
     if (!useFnmNode && !await runtime.commandExists('npm')) {
       return []
     }
+
+    // npm resolves the paths of linked packages relative to the global
+    // node_modules directory, so capture it while the packages are still there.
+    const rootResult = await runtime.runQuiet(
+      prefixWithFnm(useFnmNode, ['npm', 'root', '-g']),
+    )
+    const root = rootResult.code === 0 ? rootResult.stdout.trim() : ''
 
     const result = await runtime.runQuiet(
       prefixWithFnm(useFnmNode, ['npm', 'ls', '-g', '--json']),
@@ -305,15 +473,15 @@ async function getGlobalNpmPackages(
       return []
     }
 
-    const json = JSON.parse(result.stdout)
-    if (json && typeof json === 'object' && 'dependencies' in json) {
-      return Object.keys(json.dependencies)
+    const packages = parseGlobalNpmPackages(result.stdout, root || undefined)
+    if (packages === undefined) {
+      console.log(
+        'Warning: Unexpected npm ls output format. Continuing without package tracking.',
+      )
+      return []
     }
 
-    console.log(
-      'Warning: Unexpected npm ls output format. Continuing without package tracking.',
-    )
-    return []
+    return packages
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
     console.log('Warning: Failed to get global npm packages:', message)
