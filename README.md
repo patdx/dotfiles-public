@@ -2,6 +2,8 @@
 
 > **ppkg has moved:** see [patdx/ppkg](https://github.com/patdx/ppkg) and the
 > [JSR migration instructions](pkg/README.md). The final legacy release is 0.9.1.
+> The package catalog and deployment are maintained in `patdx/ppkg`; this repo
+> no longer deploys `repo.pmil.me`.
 
 This repository contains my preferred settings for new development environments
 and some tools to help set them up.
