@@ -176,6 +176,3 @@ dist
 
 *.tar.gz
 .aider*
-
-# Cloudflare Wrangler
-.wrangler/

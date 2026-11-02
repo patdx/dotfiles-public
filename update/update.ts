@@ -32,7 +32,6 @@ export interface UpdateRuntime {
   commandExists(command: string): Promise<boolean>
   run(command: string[]): Promise<void>
   runQuiet(command: string[]): Promise<CommandResult>
-  updateGitCredentialManager(): Promise<void>
 }
 
 if (import.meta.main) {
@@ -203,12 +202,6 @@ async function updateLinuxPackages(
   runtime: UpdateRuntime,
   step: StepRunner,
 ): Promise<void> {
-  await step('git-credential-manager', async () => {
-    if (await runtime.commandExists('git-credential-manager')) {
-      await runtime.updateGitCredentialManager()
-    }
-  })
-
   await step(
     'snap',
     () => runIfAvailable(runtime, 'snap', ['sudo', 'snap', 'refresh']),
@@ -530,16 +523,6 @@ function createRuntime(): UpdateRuntime {
         code: output.code,
         stdout: textDecoder.decode(output.stdout),
       }
-    },
-    async updateGitCredentialManager(): Promise<void> {
-      await run([
-        'deno',
-        'run',
-        '-A',
-        'jsr:@patdx/pkg',
-        'add',
-        'git-credential-manager',
-      ])
     },
   }
 }

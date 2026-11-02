@@ -1,8 +1,0 @@
-export { handleAddCommand } from './add.ts'
-export { handleListCommand } from './list.ts'
-export { handleOutdatedCommand } from './outdated.ts'
-export { handleRemoveCommand } from './remove.ts'
-export { handleRepoCommand } from './repo.ts'
-export { runSelfInstall } from './self-install.ts'
-export { handleUpdateCommand } from './update.ts'
-export { printHelp } from './help.ts'

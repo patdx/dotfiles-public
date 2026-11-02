@@ -44,10 +44,6 @@ function createMockRuntime(
         }
         return Promise.resolve(result ?? { code: 1, stdout: '' })
       },
-      updateGitCredentialManager: () => {
-        calls.push(['gcm-update'])
-        return Promise.resolve()
-      },
     },
   }
 }
@@ -151,7 +147,6 @@ Deno.test('update keeps linux system steps sequential', async () => {
   const { runtime, calls } = createMockRuntime({
     platform: 'linux',
     existingCommands: [
-      'git-credential-manager',
       'snap',
       'dnf',
       'apt',
@@ -167,7 +162,6 @@ Deno.test('update keeps linux system steps sequential', async () => {
   await update(runtime)
 
   assertEquals(calls, [
-    ['gcm-update'],
     ['sudo', 'snap', 'refresh'],
     ['sudo', 'dnf', 'upgrade', '--refresh'],
     ['sudo', 'apt', 'update'],

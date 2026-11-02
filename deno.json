@@ -1,10 +1,8 @@
 {
   "workspace": [
-    "./pkg",
     "./update",
     "./git-json-merge",
-    "./dotfiles",
-    "./repo-tools"
+    "./dotfiles"
   ],
   "fmt": {
     "singleQuote": true,
@@ -16,11 +14,7 @@
     "check-deps": "deno outdated",
     "check-deps-all": "deno outdated --recursive",
     "test-all": "deno task --recursive test",
-    "test-publish": "deno publish --dry-run",
-    "gen-schema": "deno task --cwd pkg gen-schema",
-    "check-schema": "deno task --cwd pkg check-schema",
-    "gen-site": "deno task --cwd repo-tools gen-site",
-    "bump-pkg": "deno task --cwd pkg bump-version"
+    "test-publish": "deno publish --dry-run"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@^1.0.19"
