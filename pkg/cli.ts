@@ -1,5 +1,5 @@
 import { parseArgs } from '@std/cli/parse-args'
-import { maybeNotifyPkgUpdate } from './shared/jsr-update-check.ts'
+import { maybeNotifyMigration } from './shared/migration.ts'
 import {
   handleAddCommand,
   handleListCommand,
@@ -12,7 +12,7 @@ import {
 } from './cli/commands/mod.ts'
 
 async function main(inputArgs: string[]): Promise<void> {
-  await maybeNotifyPkgUpdate()
+  maybeNotifyMigration()
 
   const args = parseArgs(inputArgs, {
     string: ['url', 'url-provider', 'version', 'name'],

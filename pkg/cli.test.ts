@@ -57,3 +57,31 @@ Deno.test('pkg help lists outdated and update', async () => {
   assert(stdout.includes('outdated'), stdout)
   assert(stdout.includes('update [name...]'), stdout)
 })
+
+Deno.test('legacy self-update and self-install show npm migration instructions without installing', async () => {
+  const root = await Deno.makeTempDir({ prefix: 'pkg-migration-test-' })
+  const cliPath = new URL('./cli.ts', import.meta.url).pathname
+  try {
+    const bin = `${root}/bin`
+    await Deno.mkdir(bin)
+    await Deno.writeTextFile(`${bin}/ppkg`, '#!/bin/sh\nexit 1\n')
+    await Deno.chmod(`${bin}/ppkg`, 0o755)
+    for (const command of ['self-update', 'self-install']) {
+      const output = await new Deno.Command(Deno.execPath(), {
+        args: ['run', '-A', cliPath, command],
+        env: { PATH: bin, DENO_INSTALL_ROOT: root },
+        stdout: 'piped',
+        stderr: 'piped',
+      }).output()
+      const stdout = new TextDecoder().decode(output.stdout)
+      assert(output.success, new TextDecoder().decode(output.stderr))
+      assert(stdout.includes('npm install -g @patdx/ppkg'), stdout)
+      assert(stdout.includes('deno uninstall -g ppkg'), stdout)
+      assert(stdout.includes(`takes precedence: ${bin}/ppkg`), stdout)
+      assert(stdout.includes('are preserved'), stdout)
+    }
+    assertEquals(await Deno.readTextFile(`${bin}/ppkg`), '#!/bin/sh\nexit 1\n')
+  } finally {
+    await Deno.remove(root, { recursive: true })
+  }
+})

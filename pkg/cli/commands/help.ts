@@ -14,8 +14,8 @@ Commands:
   repo add <url>      Add a remote repo base URL
   repo remove <url>   Remove a remote repo
   repo update         Refresh cached repo/package JSON
-  self-install        Install this CLI globally as ppkg
-  self-update         Reinstall latest @patdx/pkg as ppkg
+  self-install        Show instructions to migrate to npm
+  self-update         Show instructions to migrate to npm
 
 Options:
   --url <url>         URL to download the binary from (can also be provided as first argument)
